@@ -4,5 +4,4 @@
 
 package org.firstinspires.ftc.Hyperfang.Robot;
 
-public class Main {
-}
+public class System { }
