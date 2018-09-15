@@ -17,12 +17,12 @@ import java.util.Locale;
 public class IMU {
 
     //The IMU sensor object
-    BNO055IMU imu;
+    private BNO055IMU imu;
 
     //State used for updating telemetry
-    Orientation angles;
-    Acceleration gravity;
-    BNO055IMU.Parameters parameters;
+    private Orientation angles;
+    private Acceleration gravity;
+    private BNO055IMU.Parameters parameters;
 
     //Instantiating our hardware map
     HardwareMap hardwareMap;
@@ -90,11 +90,11 @@ public class IMU {
     }
 
     // Formatting
-    String formatAngle(AngleUnit angleUnit, double angle) {
+    private String formatAngle(AngleUnit angleUnit, double angle) {
         return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
     }
 
-    String formatDegrees(double degrees) {
+    private String formatDegrees(double degrees) {
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
     }
 
