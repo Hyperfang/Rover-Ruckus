@@ -35,6 +35,14 @@ public class IMU {
         imu.initialize(parameters);
     }
 
+    //Initializes our IMU through just the gyroscope.
+    public IMU(String deviceName) {
+        parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        imu = hardwareMap.get(BNO055IMU.class, deviceName);
+        imu.initialize(parameters);
+    }
+
     //Initializing the IMU with acceleration.
     public void initAccel(int msPollInt) {
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
