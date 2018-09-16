@@ -1,11 +1,12 @@
 package org.firstinspires.ftc.Hyperfang.Opmodes;
 
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
+import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.RangeSensor;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
+import org.opencv.core.Mat;
 
 public class LinearTest extends LinearOpMode {
     @Override
@@ -16,14 +17,19 @@ public class LinearTest extends LinearOpMode {
         Vuforia vuforia = new Vuforia("cameraMonitorViewID");
         telemetry.addLine("Vuforia initialized.");
 
+        OpenCV cv = new OpenCV();
+        telemetry.addLine("OpenCV initialized.");
+
         RangeSensor range = new RangeSensor("range");
         telemetry.addLine("Range Sensor initialized.");
 
+        vuforia.activate();
 
-       vuforia.activate();
+        telemetry.clear();
 
-       //Testing Methods
-        while(opModeIsActive()) {
+        //Testing Methods - 1
+        while (opModeIsActive()) {
+
             vuforia.getVuMark();
             telemetry.addData("X", vuforia.getDistanceX());
             telemetry.addData("Y", vuforia.getDistanceY());
@@ -33,6 +39,13 @@ public class LinearTest extends LinearOpMode {
             telemetry.update();
         }
 
+        /**
+         //Testing Methods - 2
+         vuforia.getVuMark();
+         telemetry.addLine("VuMark Acquired");
+         Mat tester = cv.getVuforia(vuforia.getBitmap());
+         telemetry.addLine("Debug false"); */
+    }
+
 
     }
-}

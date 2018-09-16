@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.Hyperfang.Sensors;
 
+import android.graphics.Bitmap;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.vuforia.Image;
+import com.vuforia.PIXEL_FORMAT;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -226,6 +230,33 @@ public class Vuforia {
         } else {
             telemetry.addData("Visible Target", "none");
         }
+    }
+
+    //Returning a bitmap for use in OpenCV. Untested.
+    public Bitmap getBitmap(){
+        vuforia.setFrameQueueCapacity(1);
+        VuforiaLocalizer.CloseableFrame frame = null; //takes the frame at the head of the queue
+        try {
+            frame = vuforia.getFrameQueue().take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        long numImages = frame.getNumImages();
+        Image rgb = null;
+
+        for (int i = 0; i < numImages; i++) {
+            if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
+                rgb = frame.getImage(i);
+                break;
+            }
+        }
+
+        Bitmap bm = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
+        bm.copyPixelsFromBuffer(rgb.getPixels());
+
+        frame.close();
+
+        return bm;
     }
 
     //Creating our matrix which places our object on the field, so we can move based off the object's position.
