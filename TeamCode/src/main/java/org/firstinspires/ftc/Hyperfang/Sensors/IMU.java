@@ -25,7 +25,7 @@ public class IMU {
     private BNO055IMU.Parameters parameters;
 
     //Instantiating our hardware map
-    HardwareMap hardwareMap;
+    private HardwareMap hardwareMap;
 
     //Initializes our IMU through just the gyroscope.
     public IMU() {
