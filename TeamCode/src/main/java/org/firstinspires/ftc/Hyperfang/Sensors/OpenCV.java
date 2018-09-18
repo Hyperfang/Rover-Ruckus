@@ -22,7 +22,7 @@ public class OpenCV {
 
     public OpenCV(){
         // Loading the OpenCV core library
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        System.loadLibrary("opencv_java3");
 
         //Preparing our matrice variables.
         resizeOutput = new Mat();

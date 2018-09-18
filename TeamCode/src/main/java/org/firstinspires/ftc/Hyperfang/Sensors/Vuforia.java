@@ -2,6 +2,7 @@ package org.firstinspires.ftc.Hyperfang.Sensors;
 
 import android.graphics.Bitmap;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.vuforia.Image;
 import com.vuforia.PIXEL_FORMAT;
@@ -57,7 +58,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  * robot's location and orientation on the field.
  */
 
-//NEEDS TO BE CLEANED AND EDITED.
+//Get Methods need to be fixed. getVuMarkName() works.
 
 public class Vuforia {
     private static final String VUFORIA_KEY = "AZN6LX7/////AAABmbg6nR27kkt3k51B4sS0SN1X0YTVkeE2krX3iLv5vh13mmWhegXY0TBkNA2mwtchs8g317OarcIF98ujECp35m/e3tAfohaTv9biiKvrcw3z+cb1RSatzL2l57sOU/dyvQX+waQ8TJ6uWiaO67P2zAOa5KCI2jsgmyILciFeC8wUqKUprOgk6F6rucdf/B+dEt4C2ZEycufoPz2XEQrHlhpPfmBymFNu93Kja2qrisBazRc8QwP2ZMwSLvoibe3b6ss06rh81AiIYIulJEkWhenKxdQh7nNUH+RQ3jvFRoJBASXEyhzGKItWaAEDOABm9zfis4sx+eNijNfChh8mdVUKSvztrjNUBcRU8On0z8kJ";
@@ -66,10 +67,6 @@ public class Vuforia {
     private static final float mmPerInch = 25.4f;
     private static final float mmFTCFieldWidth = (12 * 6) * mmPerInch;       // the width of the FTC field (from the center point to the outer panels)
     private static final float mmTargetHeight = (6) * mmPerInch;          // the height of the center of the target image above the floor
-
-    HardwareMap hardwareMap;
-    Telemetry telemetry;
-
 
     //Variable we use to store our instance of the Vuforia localization engine.
     private VuforiaLocalizer vuforia;
@@ -104,8 +101,8 @@ public class Vuforia {
         initTrack();
     }
 
-    public Vuforia(String cMVI) {
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(cMVI, "id", hardwareMap.appContext.getPackageName());
+    public Vuforia(HardwareMap hardwareMap) {
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraDirection = CAMERA_CHOICE;
@@ -216,7 +213,7 @@ public class Vuforia {
 
 
     //Locates our robot based upon the field Matrix.
-    public void findRobot() {
+    public void findRobot(Telemetry telemetry) {
         //Provide feedback as to where the robot is located (if we know).
         if (targetVisible) {
             // express position (translation) of robot in inches.
@@ -232,7 +229,7 @@ public class Vuforia {
         }
     }
 
-    //Returning a bitmap for use in OpenCV. Untested.
+    //Returning a bitmap for use in OpenCV.
     public Bitmap getBitmap(){
         vuforia.setFrameQueueCapacity(1);
         VuforiaLocalizer.CloseableFrame frame = null; //takes the frame at the head of the queue
@@ -245,14 +242,14 @@ public class Vuforia {
         Image rgb = null;
 
         for (int i = 0; i < numImages; i++) {
-            if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB565) {
+            if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888) {
                 rgb = frame.getImage(i);
                 break;
             }
         }
 
-        Bitmap bm = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
-        bm.copyPixelsFromBuffer(rgb.getPixels());
+            Bitmap bm = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
+            bm.copyPixelsFromBuffer(rgb.getPixels());
 
         frame.close();
 

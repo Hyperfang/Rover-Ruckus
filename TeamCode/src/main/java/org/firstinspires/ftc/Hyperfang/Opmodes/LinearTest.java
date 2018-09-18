@@ -1,21 +1,25 @@
 package org.firstinspires.ftc.Hyperfang.Opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
+//import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.RangeSensor;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 import org.opencv.core.Mat;
 
+@TeleOp(name = "Linear Test", group = "Linear Opmode")
 public class LinearTest extends LinearOpMode {
     @Override
     public void runOpMode() {
         IMU imu = new IMU("imu");
         telemetry.addLine("IMU initialized.");
 
-        Vuforia vuforia = new Vuforia("cameraMonitorViewID");
+        Vuforia vuforia = new Vuforia(hardwareMap);
         telemetry.addLine("Vuforia initialized.");
+
 
         OpenCV cv = new OpenCV();
         telemetry.addLine("OpenCV initialized.");
@@ -25,27 +29,24 @@ public class LinearTest extends LinearOpMode {
 
         vuforia.activate();
 
+        telemetry.update();
+        waitForStart();
         telemetry.clear();
 
         //Testing Methods - 1
         while (opModeIsActive()) {
-
             vuforia.getVuMark();
+            telemetry.addData("Name", vuforia.getVuMarkName()); //Working
+            vuforia.findRobot(telemetry);
             telemetry.addData("X", vuforia.getDistanceX());
             telemetry.addData("Y", vuforia.getDistanceY());
             telemetry.addData("Z", vuforia.getDistanceZ());
             telemetry.addData("VUFORIA Head", vuforia.getHeading());
             telemetry.addData("IMU head", imu.getHeading());
             telemetry.update();
+
         }
-
-        /**
-         //Testing Methods - 2
-         vuforia.getVuMark();
-         telemetry.addLine("VuMark Acquired");
-         Mat tester = cv.getVuforia(vuforia.getBitmap());
-         telemetry.addLine("Debug false"); */
     }
 
 
-    }
+}
