@@ -2,7 +2,6 @@ package org.firstinspires.ftc.Hyperfang.Sensors;
 
 import android.graphics.Bitmap;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.vuforia.Image;
 import com.vuforia.PIXEL_FORMAT;
@@ -11,9 +10,6 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
@@ -58,8 +54,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  * robot's location and orientation on the field.
  */
 
-//Get Methods need to be fixed. getVuMarkName() works.
-
 public class Vuforia {
     private static final String VUFORIA_KEY = "AZN6LX7/////AAABmbg6nR27kkt3k51B4sS0SN1X0YTVkeE2krX3iLv5vh13mmWhegXY0TBkNA2mwtchs8g317OarcIF98ujECp35m/e3tAfohaTv9biiKvrcw3z+cb1RSatzL2l57sOU/dyvQX+waQ8TJ6uWiaO67P2zAOa5KCI2jsgmyILciFeC8wUqKUprOgk6F6rucdf/B+dEt4C2ZEycufoPz2XEQrHlhpPfmBymFNu93Kja2qrisBazRc8QwP2ZMwSLvoibe3b6ss06rh81AiIYIulJEkWhenKxdQh7nNUH+RQ3jvFRoJBASXEyhzGKItWaAEDOABm9zfis4sx+eNijNfChh8mdVUKSvztrjNUBcRU8On0z8kJ";
 
@@ -85,7 +79,7 @@ public class Vuforia {
     private OpenGLMatrix lastLocation = null;
     private boolean targetVisible = false;
 
-    private float[] trans;
+    private VectorF trans;
     private Orientation rot;
 
     //Initializes our vuforia object without a camera monitor.
@@ -101,6 +95,7 @@ public class Vuforia {
         initTrack();
     }
 
+    //Initializes our vuforia object with a camera montitor.
     public Vuforia(HardwareMap hardwareMap) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
@@ -114,6 +109,7 @@ public class Vuforia {
         initTrack();
     }
 
+    //Initializing our trackables so we can find them.
     public void initTrack() {
         targetsRoverRuckus = this.vuforia.loadTrackablesFromAsset("RoverRuckus");
         // Load the data sets that for the trackable objects. These particular data
@@ -141,96 +137,104 @@ public class Vuforia {
     }
 
     //Finding our vuMark and all its information.
+    //Also returns the location of our robot.
     public void getVuMark() {
-        //check all the trackable target to see which one (if any) is visible.
         targetVisible = false;
-        for (VuforiaTrackable vuMark : allTrackables) {
-            //If we locate a vumark, log it, and the robot location.
-            if (((VuforiaTrackableDefaultListener) vuMark.getListener()).isVisible()) {
-                targetVisible = true; //Logging the target as visible.
+        for (VuforiaTrackable trackable : allTrackables) {
+            if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+                targetVisible = true;
 
-                //Log the robot location.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) vuMark.getListener()).getUpdatedRobotLocation();
+                // getUpdatedRobotLocation() will return null if no new information is available since
+                // the last time that call was made, or if the Trackable is not currently visible.
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
                 if (robotLocationTransform != null) {
                     lastLocation = robotLocationTransform;
-
-                    trans = lastLocation.getTranslation().getData();
-                    rot = Orientation.getOrientation(lastLocation, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
                 }
-
+                break;
             }
-            break;
         }
+
+        // Provide feedback as to where the robot is located (if we know).
+        if (targetVisible) {
+            //Express position (translation) of robot in inches.
+            trans = lastLocation.getTranslation();
+            //Express the rotation of the robot in degrees.
+            rot = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+        }
+
     }
 
     //Finding our vuMark and returning only the name. Returns null if not found.
     public String getVuMarkName() {
+        targetVisible = false;
         for (VuforiaTrackable vuMark : allTrackables) {
             if (((VuforiaTrackableDefaultListener) vuMark.getListener()).isVisible()) {
-                return vuMark.getName(); //Logging the vumark name.
+                targetVisible = true;
+                return vuMark.getName(); //Logging the vuMark name.
             }
         }
         return null;
     }
 
+    //Returns whether or not the vuMark was visible in the last checked state.
+    public boolean isVisible() {
+        return (targetVisible);
+    }
+
+    //Returns the telemetry data of the last checked state.
+    public void getInfo(Telemetry telemetry) {
+        if (targetVisible) {
+            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                    trans.get(0) / mmPerInch, trans.get(1) / mmPerInch, trans.get(2) / mmPerInch);
+            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rot.firstAngle, rot.secondAngle, rot.thirdAngle);
+        }
+    }
+
     // Extract the X, Y, and Z components of the target robot relative to the target.
     //Returning the x (forwards) value of the robot relative to the target.
     public float getDistanceX() {
-        if (targetVisible) return trans[0];
+        if (targetVisible)
+
+
+            return trans.get(0) / mmPerInch;
         return 0;
     }
 
     //Returning the y (left/right) value of the robot relative to the target.
     public float getDistanceY() {
-        if (targetVisible) return trans[1];
+        if (targetVisible) return trans.get(0) / mmPerInch;
         return 0;
     }
 
     //Returning the z (upwards) value of the robot relative to the target.
     public float getDistanceZ() {
-        if (targetVisible) return trans[2];
+        if (targetVisible) return trans.get(0) / mmPerInch;
         return 0;
     }
 
     //Extract the rotational components of the robot relative to the target.
-    //Returning the heading? value of the robot relative to the target.
-    public double getHeading() {
+    //Returning the roll value of the robot relative to the target.
+    public double getRoll() {
         if (targetVisible) return rot.firstAngle;
         return 0;
     }
 
-    //Returning the roll? value of the robot relative to the target.
-    public double getRoll() {
+    //Returning the pitch value of the robot relative to the target.
+    public double getPitch() {
         if (targetVisible) return rot.secondAngle;
         return 0;
     }
 
-    //Returning the pitch? value of the robot relative to the target.
-    public double getPitch() {
+    //Returning the heading value of the robot relative to the target.
+    public double getHeading() {
         if (targetVisible) return rot.thirdAngle;
         return 0;
     }
 
-
-    //Locates our robot based upon the field Matrix.
-    public void findRobot(Telemetry telemetry) {
-        //Provide feedback as to where the robot is located (if we know).
-        if (targetVisible) {
-            // express position (translation) of robot in inches.
-            VectorF translation = lastLocation.getTranslation();
-            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-
-            // express the rotation of the robot in degrees.
-            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-        } else {
-            telemetry.addData("Visible Target", "none");
-        }
-    }
-
     //Returning a bitmap for use in OpenCV.
-    public Bitmap getBitmap(){
+    public Bitmap getBitmap() {
+        Image rgb;
+        com.vuforia.Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
         vuforia.setFrameQueueCapacity(1);
         VuforiaLocalizer.CloseableFrame frame = null; //takes the frame at the head of the queue
         try {
@@ -238,22 +242,25 @@ public class Vuforia {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        long numImages = frame.getNumImages();
-        Image rgb = null;
 
-        for (int i = 0; i < numImages; i++) {
-            if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888) {
+        for (int i = 0; i < frame.getNumImages(); i++) {
+            Image img = frame.getImage(i);
+
+            if (img.getFormat() == PIXEL_FORMAT.RGB565) {
                 rgb = frame.getImage(i);
-                break;
+                Bitmap bitmap = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
+                bitmap.copyPixelsFromBuffer(rgb.getPixels());
+
+                return bitmap;
             }
         }
+        return null;
+    }
 
-            Bitmap bm = Bitmap.createBitmap(rgb.getWidth(), rgb.getHeight(), Bitmap.Config.RGB_565);
-            bm.copyPixelsFromBuffer(rgb.getPixels());
-
-        frame.close();
-
-        return bm;
+    //De-initializing our bitmap configurations used in OpenCV.
+    public void cvRelease() {
+        com.vuforia.Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, false);
+        vuforia.setFrameQueueCapacity(10);
     }
 
     //Creating our matrix which places our object on the field, so we can move based off the object's position.
@@ -339,5 +346,9 @@ public class Vuforia {
         for (VuforiaTrackable trackable : allTrackables) {
             ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(phoneMatrix, parameters.cameraDirection);
         }
+    }
+
+    private String format(OpenGLMatrix transformationMatrix) {
+        return transformationMatrix.formatAsTransform();
     }
 }

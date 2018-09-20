@@ -16,6 +16,8 @@ For more information about the *FIRST* organization, visit the [FIRST website](h
 
 * **Computer Vision** - In order to sense objects, we utilize an Open Source Computer Vision Library called OpenCV. Using OpenCV allows us to interact with the game field in numerous ways.
 
+* **Augmented Reality** - In addition to Computer Vision, we also use Vuforia: an Augmented Reality SDK that allows us to recognize objects, and position the robot based on the sensed object.
+
 * **Redacted** - Redacted until 2/9/2019.
 
 ### Javadoc Reference Material

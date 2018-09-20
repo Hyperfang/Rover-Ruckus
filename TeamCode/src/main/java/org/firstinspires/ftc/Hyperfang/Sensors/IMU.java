@@ -2,6 +2,7 @@ package org.firstinspires.ftc.Hyperfang.Sensors;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
@@ -24,11 +25,8 @@ public class IMU {
     private Acceleration gravity;
     private BNO055IMU.Parameters parameters;
 
-    //Instantiating our hardware map
-    private HardwareMap hardwareMap;
-
     //Initializes our IMU through just the gyroscope.
-    public IMU() {
+    public IMU(HardwareMap hardwareMap) {
         parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -36,7 +34,7 @@ public class IMU {
     }
 
     //Initializes our IMU through just the gyroscope.
-    public IMU(String deviceName) {
+    public IMU(String deviceName, HardwareMap hardwareMap) {
         parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         imu = hardwareMap.get(BNO055IMU.class, deviceName);

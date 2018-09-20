@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -20,7 +19,7 @@ public class OpenCV {
     private Mat dilateOutput;
     private Mat hierarchy;
 
-    public OpenCV(){
+    public OpenCV() {
         // Loading the OpenCV core library
         System.loadLibrary("opencv_java3");
 
@@ -72,14 +71,13 @@ public class OpenCV {
 
     }
 
-    public void findBlobs(){}
-
-    //Converting a bitmap received from Vuforia to a mat object we can utilize.
-    public Mat getVuforia(Bitmap img){
-        Mat tmp = new Mat(img.getWidth(), img.getHeight(), CvType.CV_8UC4);
-        Utils.bitmapToMat(img, tmp);
-
-        return tmp;
+    public void findBlobs() {
     }
 
+    //Converting a bitmap received from Vuforia to a mat object we can utilize.
+    public Mat getVuforia(Bitmap img) {
+        Mat mat = new Mat();
+        if (img != null) Utils.bitmapToMat(img, mat);
+        return mat;
+    }
 }
