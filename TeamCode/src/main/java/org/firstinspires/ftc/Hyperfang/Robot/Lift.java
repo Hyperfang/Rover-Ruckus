@@ -7,17 +7,18 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
 
 public class Lift {
-    private DcMotor liftMotor;
-    private DcMotor ratchetMotor;
-    private Servo hook; //May need to edit.
-    private MGL mgl;
-    private LEVEL pos;
+    public MGL mgl;
 
-    private enum LEVEL {
+    public enum LEVEL {
         GROUND,
         LATCH,
         TOP
     }
+
+    private DcMotor liftMotor;
+    private DcMotor ratchetMotor;
+    private Servo hook; //May need to edit.
+    private LEVEL pos;
 
     public Lift(HardwareMap hMap){
         pos = LEVEL.LATCH;
@@ -48,6 +49,7 @@ public class Lift {
                 pos = LEVEL.TOP;
                 break;
         }
+        stop();
     }
 
     //TODO add method which checks for change in magnetic limit switch and changes state.

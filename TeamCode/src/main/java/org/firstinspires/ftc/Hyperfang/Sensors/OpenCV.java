@@ -26,8 +26,9 @@ public class OpenCV {
     private Mat erodeOutput;
     private Mat drawing;
     private Mat hierarchy;
-
     private List<MatOfPoint> contours = new ArrayList<>();
+
+    private boolean goldFound = false;
 
     public OpenCV() {
         // Loading the OpenCV core library
@@ -80,6 +81,8 @@ public class OpenCV {
     }
 
     public void findGold(Mat input, Telemetry telemetry) {
+        goldFound = false;
+
         //Step 1. Resizing our picture in order to decrease runtime.
         Mat resize = input;
         Size cvResizeDsize = new Size(0, 0);
@@ -143,6 +146,10 @@ public class OpenCV {
                     telemetry.addData("Shape", arcL.size().height);
             }
         }
+    }
+
+    public boolean getGold() {
+        return goldFound;
     }
 
     //Converting a bitmap received from Vuforia to a mat object we can utilize.
