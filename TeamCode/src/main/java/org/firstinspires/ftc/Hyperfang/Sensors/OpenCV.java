@@ -9,6 +9,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -29,6 +30,7 @@ public class OpenCV {
     private List<MatOfPoint> contours = new ArrayList<>();
 
     private boolean goldFound = false;
+    private Point cameraMidpoint;
 
     public OpenCV() {
         // Loading the OpenCV core library
@@ -113,27 +115,16 @@ public class OpenCV {
 
         // Step 5. Finding the contours so we can use them to return the position of the cube.
         Mat findContours = erodeOutput;
+        contours.clear(); //Clear any previous contours.
         Imgproc.findContours(findContours, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        findSquaresTest(contours, 1000, telemetry);
+        if (findSquares(contours, 1000) != null) {
+            telemetry.addData("Cube:", findSquares(contours, 1000).toString());
+        }
     }
 
     //Iterates through given contours and locates all of the square shapes of a certain size.
-    private void findSquares(List<MatOfPoint> contours, double minArea) {
-            for (int i = 0; i < contours.size(); i++) {
-                MatOfPoint contour = contours.get(i);
-                MatOfPoint2f arcL = new MatOfPoint2f(contour.toArray());
-                double perimeter = Imgproc.arcLength(arcL, true);
-
-                //Using perimeter to apply a 10% approximation to the points in the closed contours.
-                Imgproc.approxPolyDP(arcL, arcL, .1 * perimeter, true);
-
-                //Filtering by Area and Contour Shape.
-                if (minArea < Imgproc.contourArea(contour) && arcL.size().height == 4) {}
-            }
-    }
-
-    private void findSquaresTest(List<MatOfPoint> contours, double minArea, Telemetry telemetry) {
+    private Point findSquares(List<MatOfPoint> contours, double minArea) {
         for (int i = 0; i < contours.size(); i++) {
             MatOfPoint contour = contours.get(i);
             MatOfPoint2f arcL = new MatOfPoint2f(contour.toArray());
@@ -142,10 +133,25 @@ public class OpenCV {
             //Using perimeter to apply a 10% approximation to the points in the closed contours.
             Imgproc.approxPolyDP(arcL, arcL, .1 * perimeter, true);
 
-            if (minArea < Imgproc.contourArea(contour) && arcL.size().height == 4) { //Filtering by Area and Contour Shape.
-                    telemetry.addData("Shape", arcL.size().height);
+            //Filtering by Area and shape.
+            if (minArea < Imgproc.contourArea(contour) && arcL.size().height == 4) {
+                //Displaying our coordinates by multiplying our previously resized contour, finding the bounding box and the points.
+                Core.multiply(contour, new Scalar(2, 2), contour);
+                Rect rect = Imgproc.boundingRect(contour);
+                //Finding first and second point of bounding box.
+                Point xy1 = new Point(rect.x, rect.y);
+                Point xy2 = new Point(rect.x + rect.width, rect.y + rect.height);
+                //Returns the midpoint which consists of 2 doubles.
+                //In order to show all the cubes, change to a telemetry call.
+                return new Point((xy1.x + xy2.x) / 2, (xy1.y + xy2.y) / 2);
             }
         }
+        return null;
+    }
+
+    public Point phoneMidpoint(Mat input) {
+        cameraMidpoint = new Point(input.width() / 2.0, input.height() / 2.0);
+        return cameraMidpoint;
     }
 
     public boolean getGold() {

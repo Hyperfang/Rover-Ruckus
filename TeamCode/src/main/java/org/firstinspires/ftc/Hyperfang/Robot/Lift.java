@@ -15,8 +15,8 @@ public class Lift {
         TOP
     }
 
-    private DcMotor liftMotor;
-    private DcMotor ratchetMotor;
+    public DcMotor liftMotor;
+    public DcMotor ratchetMotor;
     private Servo hook; //May need to edit.
     private LEVEL pos;
 
@@ -31,41 +31,40 @@ public class Lift {
 
     //TODO create loop to set appropriate power to motor then stop once at desired position
     //May need to edit.
-    public void moveTo(LEVEL lvl, double power) {
+    public void moveTo(LEVEL lvl, double power, DcMotor motor) {
         switch (lvl) {
             case GROUND:
                 if(pos == lvl.GROUND || power != Math.abs(power)){break;}
-                move(power);
+                move(power, motor);
                 pos = LEVEL.GROUND;
                 break;
             case LATCH:
                 if(pos == lvl.LATCH){break;}
-                move(power);
+                move(power, motor);
                 pos = LEVEL.LATCH;
                 break;
             case TOP:
                 if(pos == lvl.TOP || power == Math.abs(power)){break;}
-                move(power);
+                move(power, motor);
                 pos = LEVEL.TOP;
                 break;
         }
         stop();
     }
 
-    //TODO add method which checks for change in magnetic limit switch and changes state.
-    //Moves our lift up or down depending on the given power.
-    public void move(double power) {
+    //Moves our lift/ratchet up or down depending on the given power.
+    public void move(double power, DcMotor motor) {
         switch (pos) {
             case GROUND:
                 if (power > 0) {
-                    liftMotor.setPower(power);
+                    motor.setPower(power);
                     if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
                 }
                 break;
 
             case LATCH:
                 if (power < 0 || 0 < power) {
-                    liftMotor.setPower(power);
+                    motor.setPower(power);
                     if (mgl.isStateChange()) {
                         if (power < 0) { pos = LEVEL.GROUND; }
                         if (power > 0) { pos = LEVEL.TOP; }
@@ -75,7 +74,7 @@ public class Lift {
 
             case TOP:
                 if (power < 0) {
-                    liftMotor.setPower(power);
+                    motor.setPower(power);
                     if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
                 }
                 break;
@@ -84,7 +83,7 @@ public class Lift {
 
     public void stop() {
         liftMotor.setPower(0);
-        //ratchetMotor.setPower(); until you lock in the ratchet;
+        ratchetMotor.setPower(0);
     }
 
     //Sets the position of our lift.
