@@ -15,18 +15,22 @@ public class Lift {
         TOP
     }
 
-    public DcMotor liftMotor;
-    public DcMotor ratchetMotor;
-    private Servo hook; //May need to edit.
+    private DcMotor liftMotor;
+    private DcMotor ratchetMotor;
+    private Servo hook;
+
     private LEVEL pos;
 
     public Lift(HardwareMap hMap){
-        pos = LEVEL.LATCH;
-        mgl = new MGL(hMap, "mgl");
         liftMotor = hMap.get(DcMotor.class, "lift");
         ratchetMotor = hMap.get(DcMotor.class, "ratchet");
         ratchetMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        hook = hMap.get(Servo.class, "hook");
+
+
+        mgl = new MGL(hMap, "mgl");
+        pos = LEVEL.GROUND;
     }
 
     //TODO create loop to set appropriate power to motor then stop once at desired position
@@ -99,5 +103,10 @@ public class Lift {
     public void hook() { hook.setPosition(1); } //need to test position
 
     public void unhook() { hook.setPosition(0); } //need to test position
+
+    public DcMotor liftMotor() { return liftMotor; }
+
+    public DcMotor ratchetMotor() { return ratchetMotor; }
+
 
 }

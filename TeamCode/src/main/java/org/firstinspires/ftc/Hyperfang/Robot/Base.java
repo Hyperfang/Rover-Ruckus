@@ -16,10 +16,14 @@ public class Base {
     private IMU imu;
     private RangeSensor rSensor;
 
-    //NOTE: REGARDING THE SET (LOOPING) METHODS, TESTING NEEDS TO BE DONE ON WHETHER NULL VARIABLES EFFECT INVOCATION.
-    private double curAng; //NEED TO FIGURE OUT WHAT ANGLE. "Turning" value.
+    private static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // Rev Orbital 40:1
+    private static final double     DRIVE_GEAR_REDUCTION    = 20 / 15.0;// Drive-Train Gear Ratio.
+    private static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // Andymark Stealth/Omni Wheels
+    private static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
+
+    private double curAng;
     private double curDis; //NEED TO TEST FOR NOISE OF MODEL
-    private double curEnc; //NEED TO ADD ENCODER INFORMATION TO DCMOTOR CLASS.
+    private double curEnc;
 
     public Base(HardwareMap hMap) {
         backLeft = hMap.get(DcMotor.class, "Back Left");
@@ -31,10 +35,24 @@ public class Base {
 
         imu = new IMU(hMap);
         rSensor = new RangeSensor("range", hMap);
+
+        initPos();
     }
 
-    //May or may not be needed based on test. Initializes our position variables.
-    public void initPos(){}
+    //Initializes position so that we can initially run our turn methods.
+    public void initPos(){
+        curAng = 0;
+        curDis = 0;
+        curEnc = 0;
+    }
+
+    //Initializes position based on estimated location.
+    //Used to prevent big jumps in initial runs.
+    public void initPos(double pos) {
+        curAng = pos;
+        curDis = pos;
+        curEnc = pos;
+    }
 
     //Sets the mode of the motors.
     public void setModeMotor(DcMotor.ZeroPowerBehavior mode) {
@@ -61,12 +79,12 @@ public class Base {
         frontRight.setMode(mode);
     }
 
-    //Sets a target position for all our encoders.
+    //Sets a target position for all our encoders. (Inches)
     private void setEncoderPosition(int pos) {
-        backLeft.setTargetPosition(pos);
-        backRight.setTargetPosition(pos);
-        frontLeft.setTargetPosition(pos);
-        frontRight.setTargetPosition(pos);
+        backLeft.setTargetPosition((int)(pos * COUNTS_PER_INCH));
+        backRight.setTargetPosition((int)(pos * COUNTS_PER_INCH));
+        frontLeft.setTargetPosition((int)(pos * COUNTS_PER_INCH));
+        frontRight.setTargetPosition((int)(pos * COUNTS_PER_INCH));
     }
 
     //Calculates the current position for our encoders.

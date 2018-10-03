@@ -68,22 +68,22 @@ public class IMU {
         return Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
     }
 
-    //Returning our Roll
-    public double getRoll() {
+    //Returning our Pitch
+    public double getPitch() {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         return Double.parseDouble(formatAngle(angles.angleUnit, angles.secondAngle));
     }
 
-    //Returning our Pitch
-    public double getPitch() {
+    //Returning our Roll
+    public double getRoll() {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         return Double.parseDouble(formatAngle(angles.angleUnit, angles.thirdAngle));
     }
 
     //Returning our Gravity
-    public double getGravity() {
+    public String getGravity() {
         gravity = imu.getGravity();
-        return Double.parseDouble(gravity.toString());
+        return gravity.toString();
     }
 
     //Returning our Acceleration
