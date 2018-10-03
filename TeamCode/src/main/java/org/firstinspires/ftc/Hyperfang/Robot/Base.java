@@ -1,13 +1,10 @@
 package org.firstinspires.ftc.Hyperfang.Robot;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.sun.tools.javac.tree.DCTree;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
 import org.firstinspires.ftc.Hyperfang.Sensors.RangeSensor;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Base {
 
@@ -19,8 +16,10 @@ public class Base {
     private IMU imu;
     private RangeSensor rSensor;
 
+    //NOTE: REGARDING THE SET (LOOPING) METHODS, TESTING NEEDS TO BE DONE ON WHETHER NULL VARIABLES EFFECT INVOCATION.
     private double curAng; //NEED TO FIGURE OUT WHAT ANGLE. "Turning" value.
-    private double curDis;
+    private double curDis; //NEED TO TEST FOR NOISE OF MODEL
+    private double curEnc; //NEED TO ADD ENCODER INFORMATION TO DCMOTOR CLASS.
 
     public Base(HardwareMap hMap) {
         backLeft = hMap.get(DcMotor.class, "Back Left");
@@ -34,6 +33,9 @@ public class Base {
         rSensor = new RangeSensor("range", hMap);
     }
 
+    //May or may not be needed based on test. Initializes our position variables.
+    public void initPos(){}
+
     //Sets the mode of the motors.
     public void setModeMotor(DcMotor.ZeroPowerBehavior mode) {
         backLeft.setZeroPowerBehavior(mode);
@@ -41,6 +43,14 @@ public class Base {
         frontLeft.setZeroPowerBehavior(mode);
         frontRight.setZeroPowerBehavior(mode);
 
+    }
+
+    //Resets the encoder count.
+    public void resetEncoders() {
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     //Sets the mode of the encoders
@@ -51,12 +61,41 @@ public class Base {
         frontRight.setMode(mode);
     }
 
-    //Moves our robot based on linear (forward/backwards) and turn values (right/left)
-    public void move(double linear, double turn) {
-        backLeft.setPower(linear - turn);
-        backRight.setPower(linear + turn);
-        frontLeft.setPower(linear - turn);
-        frontRight.setPower(linear + turn);
+    //Sets a target position for all our encoders.
+    private void setEncoderPosition(int pos) {
+        backLeft.setTargetPosition(pos);
+        backRight.setTargetPosition(pos);
+        frontLeft.setTargetPosition(pos);
+        frontRight.setTargetPosition(pos);
+    }
+
+    //Calculates the current position for our encoders.
+    private double getEncoderPosition() {
+        double total = 0;
+        total += backLeft.getCurrentPosition();
+        total += backRight.getCurrentPosition();
+        total += frontLeft.getCurrentPosition();
+        total += frontRight.getCurrentPosition();
+        return total / 4.0;
+    }
+
+    //Moves the robot to a certain position using encoders.
+    public void moveEncoders(int pos, double power) {
+        resetEncoders();
+        setModeEncoder(DcMotor.RunMode.RUN_TO_POSITION);
+        setEncoderPosition(pos);
+        curEnc = getEncoderPosition();
+
+        if (setEnc(pos)) {
+            //Insert PID HERE
+            move(power, 0);
+        }
+        stop();
+    }
+
+    //Returns whether our encoder is not in the desired position. Useful for loops.
+    public boolean setEnc(int pos) {
+        return curEnc < pos - 100 || pos + 100 < curEnc;
     }
 
     //Stops the robot.
@@ -65,6 +104,14 @@ public class Base {
         backRight.setPower(0);
         frontLeft.setPower(0);
         frontRight.setPower(0);
+    }
+
+    //Moves our robot based on linear (forward/backwards) and turn values (right/left)
+    public void move(double linear, double turn) {
+        backLeft.setPower(linear - turn);
+        backRight.setPower(linear + turn);
+        frontLeft.setPower(linear - turn);
+        frontRight.setPower(linear + turn);
     }
 
     //Future: Remove power parameters from the turn methods.
@@ -78,9 +125,9 @@ public class Base {
         double errorMove;
 
         //curAng is the current position of our robot. NEED TO FIGURE OUT WHAT ANGLE TO USE.
-         curAng = imu.getHeading();
+        curAng = imu.getHeading();
 
-        //If sensor isn't in the desired angle position, run.
+        //If sensor isn't in the desired angle, run.
         if (setTurn(deg)) {
 
             //Finding how far away we are from the target position.
@@ -124,7 +171,7 @@ public class Base {
         double rDeg = curAng - deg;
 
         //Makes sure that our number is within the 180 degree plane.
-        while(rDeg < -180 && rDeg < 180) {
+        while (rDeg < -180 && rDeg < 180) {
             if (rDeg > 180) {
                 rDeg -= 360;
             } else if (rDeg < -180) {
@@ -136,9 +183,9 @@ public class Base {
         turnAbsolute(pow, rDeg);
     }
 
-    //Returns whether our turn is completed. Useful for loops.
+    //Returns whether our angle is not in the desired position. Useful for loops.
     public boolean setTurn(double deg) {
-        return curAng > deg + 1 || curAng < deg - 1;
+        return curAng < deg - 1 || deg + 1 < curAng;
     }
 
     //Moves to a position based on the distance from our range sensor.
@@ -148,7 +195,8 @@ public class Base {
         double pow;
         double localRange;
 
-        if (setRange(inAway)) { //While sensor isn't in the desired position, run.
+        //If sensor isn't in the desired position, run.
+        if (setRange(inAway)) {
             localRange = sensor.getDistanceIN();
 
             //If a faulty value is detected, don't update our used variable till a good one is found.
@@ -171,11 +219,10 @@ public class Base {
         stop();
     }
 
-    //Returns whether our turn is completed. Useful for loops.
+    //Returns whether our distance is not in the desired position. Useful for loops.
     public boolean setRange(double inAway) {
-        return curDis < inAway - .35 || curDis > inAway + .35;
+        return curDis < inAway - .35 || inAway + .35 < curDis;
     }
-
 }
 
 
