@@ -143,7 +143,8 @@ public class OpenCV {
                 Point xy2 = new Point(rect.x + rect.width, rect.y + rect.height);
                 //Returns the midpoint which consists of 2 doubles.
                 //In order to show all the cubes, change to a telemetry call.
-                return new Point((xy1.x + xy2.x) / 2, (xy1.y + xy2.y) / 2);
+                //return new Point((xy1.x + xy2.x) / 2, (xy1.y + xy2.y) / 2);, Midpoint
+                return new Point(0, 13319.76/rect.width); //returns our Depth
             }
         }
         return null;
