@@ -22,8 +22,8 @@ public class LinearTest extends LinearOpMode {
         vf.activate();
         //Testing Methods
         while (opModeIsActive()) {
+            telemetry.addData("Phone: ", cv.phoneMidpoint(cv.getVuforia( vf.getBitmap() )).toString());
             cv.findGold( cv.getVuforia( vf.getBitmap() ), telemetry );
-
             //Nothing to Test
             telemetry.update();
         }

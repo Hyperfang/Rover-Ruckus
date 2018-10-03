@@ -9,6 +9,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -29,6 +30,8 @@ public class OpenCV {
     private List<MatOfPoint> contours = new ArrayList<>();
 
     private boolean goldFound = false;
+    private Point cameraMidpoint;
+    private Point cameraDimensions;
 
     public OpenCV() {
         // Loading the OpenCV core library
@@ -84,6 +87,7 @@ public class OpenCV {
         goldFound = false;
 
         //Step 1. Resizing our picture in order to decrease runtime.
+        phoneDimensions(input);
         Mat resize = input;
         Size cvResizeDsize = new Size(0, 0);
         double cvResizeFx = 0.5;
@@ -113,27 +117,16 @@ public class OpenCV {
 
         // Step 5. Finding the contours so we can use them to return the position of the cube.
         Mat findContours = erodeOutput;
+        contours.clear(); //Clear any previous contours.
         Imgproc.findContours(findContours, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        findSquaresTest(contours, 1000, telemetry);
+        if (findSquares(contours, 1000) != null) {
+            telemetry.addData("Cube:", findSquares(contours, 1000).toString());
+        }
     }
 
     //Iterates through given contours and locates all of the square shapes of a certain size.
-    private void findSquares(List<MatOfPoint> contours, double minArea) {
-            for (int i = 0; i < contours.size(); i++) {
-                MatOfPoint contour = contours.get(i);
-                MatOfPoint2f arcL = new MatOfPoint2f(contour.toArray());
-                double perimeter = Imgproc.arcLength(arcL, true);
-
-                //Using perimeter to apply a 10% approximation to the points in the closed contours.
-                Imgproc.approxPolyDP(arcL, arcL, .1 * perimeter, true);
-
-                //Filtering by Area and Contour Shape.
-                if (minArea < Imgproc.contourArea(contour) && arcL.size().height == 4) {}
-            }
-    }
-
-    private void findSquaresTest(List<MatOfPoint> contours, double minArea, Telemetry telemetry) {
+    private Point3D findSquares(List<MatOfPoint> contours, double minArea) {
         for (int i = 0; i < contours.size(); i++) {
             MatOfPoint contour = contours.get(i);
             MatOfPoint2f arcL = new MatOfPoint2f(contour.toArray());
@@ -141,11 +134,72 @@ public class OpenCV {
 
             //Using perimeter to apply a 10% approximation to the points in the closed contours.
             Imgproc.approxPolyDP(arcL, arcL, .1 * perimeter, true);
-
-            if (minArea < Imgproc.contourArea(contour) && arcL.size().height == 4) { //Filtering by Area and Contour Shape.
-                    telemetry.addData("Shape", arcL.size().height);
+            //Focal Length = 2622 [cm]
+            //Formula to find depth = (5.08*2622)/Pixels
+            // OR (13,319.76)/Pixels of width
+            //Filtering by Area and shape.
+            if (minArea < Imgproc.contourArea(contour) && arcL.size().height == 4) {
+                //Displaying our coordinates by multiplying our previously resized contour, finding the bounding box and the points.
+                Core.multiply(contour, new Scalar(2, 2), contour);
+                Rect rect = Imgproc.boundingRect(contour);
+                //Finding first and second point of bounding box.
+                Point xy1 = new Point(rect.x, rect.y);
+                Point xy2 = new Point(rect.x + rect.width, rect.y + rect.height);
+                //Returns the midpoint which consists of 2 doubles.
+                //In order to show all the cubes, change to a telemetry call.
+                // (Screen width x Distance)/ Focal Length =  Width in CM of screen at distance of cube
+                double distanceZ = (13319.76)/rect.width;
+                double ScreenWidthAtCube = (cameraDimensions.x*distanceZ)/2622;
+                double convRatioX = cameraDimensions.x/ScreenWidthAtCube;
+                double newX = ((xy1.x+xy2.x)/2)*convRatioX;
+                double hypotenuse = Math.sqrt((distanceZ*distanceZ)+(newX*newX));
+                double angle = Math.acos(distanceZ/hypotenuse);
+                Point3D coord = new Point3D(newX, ((13319.76)/rect.width), angle);
+                return coord;// memes / TESTING *dap*
+                //return new Point((xy1.x + xy2.x) / 2, (xy1.y + xy2.y) / 2);
             }
         }
+        return null;
+    }
+
+    private class Point3D{
+        private double x;
+        private double y;
+        private double z;
+
+        public Point3D() {
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+        }
+
+        public Point3D(double x, double y, double z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public void setPoints(double x, double y, double z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public double[] getPoints() {
+            return new double[] {x,y,z};
+        }
+    }
+
+
+
+    public Point phoneMidpoint(Mat input) {
+        cameraMidpoint = new Point(input.width() / 2.0, input.height() / 2.0);
+        return cameraMidpoint;
+    }
+
+    public Point phoneDimensions(Mat input) {
+        cameraDimensions = new Point(input.width(), input.height());
+        return cameraDimensions;
     }
 
     public boolean getGold() {
