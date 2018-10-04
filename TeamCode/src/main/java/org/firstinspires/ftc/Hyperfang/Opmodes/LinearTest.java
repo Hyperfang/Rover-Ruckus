@@ -2,9 +2,6 @@ package org.firstinspires.ftc.Hyperfang.Opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
-import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
 import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
@@ -17,6 +14,8 @@ public class LinearTest extends LinearOpMode {
         Vuforia vf = new Vuforia();
         OpenCV cv = new OpenCV();
 
+        cv.activate(vf.getBitmap());
+
         telemetry.update();
         waitForStart();
         telemetry.clear();
@@ -24,9 +23,8 @@ public class LinearTest extends LinearOpMode {
         vf.activate();
         //Testing Methods
         while (opModeIsActive()) {
-            telemetry.addData("Phone: ", cv.phoneMidpoint(cv.getVuforia( vf.getBitmap() )).toString());
             cv.findGold( cv.getVuforia( vf.getBitmap() ), telemetry );
-            //Test: Base Movements, Lift Tracking, 
+            //Test: Base Movements, Lift Tracking, Marker, CV ANGLES
             telemetry.update();
         }
     }
