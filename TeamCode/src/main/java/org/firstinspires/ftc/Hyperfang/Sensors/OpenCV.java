@@ -1,3 +1,9 @@
+/*
+    11503 Hyperfang:
+        Finding and location methods (in relation to object pixels) done by Caleb Browne.
+        Finding of distance in axis CM done by Daniel Kasabov.
+ */
+
 package org.firstinspires.ftc.Hyperfang.Sensors;
 
 import android.graphics.Bitmap;
@@ -20,7 +26,6 @@ import java.util.List;
 
 public class OpenCV {
 
-    private Mat frame;
     private Mat resizeOutput;
     private Mat blurOutput;
     private Mat hsvOutput;
@@ -36,6 +41,7 @@ public class OpenCV {
     private Point goldMidpoint;
     private Point3D gold3D;
 
+    //Initializes the OpenCV library and our matrices required to run vision.
     public OpenCV() {
         // Loading the OpenCV core library
         System.loadLibrary("opencv_java3");

@@ -25,6 +25,7 @@ public class Base {
     private double curDis; //NEED TO TEST FOR NOISE OF MODEL
     private double curEnc;
 
+    //Initializes the base objects.
     public Base(HardwareMap hMap) {
         backLeft = hMap.get(DcMotor.class, "Back Left");
         backRight = hMap.get(DcMotor.class, "Back Right");
@@ -60,7 +61,6 @@ public class Base {
         backRight.setZeroPowerBehavior(mode);
         frontLeft.setZeroPowerBehavior(mode);
         frontRight.setZeroPowerBehavior(mode);
-
     }
 
     //Resets the encoder count.

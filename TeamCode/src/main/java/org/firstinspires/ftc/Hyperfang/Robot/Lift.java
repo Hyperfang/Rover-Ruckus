@@ -17,17 +17,17 @@ public class Lift {
 
     private DcMotor liftMotor;
     private DcMotor ratchetMotor;
-    private Servo hook;
+    private Servo hook; //Possibly change to continuous to ease teleop.
 
     private LEVEL pos;
 
+    //Initializes the lift objects.
     public Lift(HardwareMap hMap){
         liftMotor = hMap.get(DcMotor.class, "lift");
         ratchetMotor = hMap.get(DcMotor.class, "ratchet");
         ratchetMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         hook = hMap.get(Servo.class, "hook");
-
 
         mgl = new MGL(hMap, "mgl");
         pos = LEVEL.GROUND;
@@ -85,6 +85,7 @@ public class Lift {
         }
     }
 
+    //Stops the lift/ratchet.
     public void stop() {
         liftMotor.setPower(0);
         ratchetMotor.setPower(0);
@@ -100,12 +101,16 @@ public class Lift {
         return pos.name();
     }
 
+    //Moves the hook to a position which we can hook.
     public void hook() { hook.setPosition(1); } //need to test position
 
+    //Moves the hook to a position which we can unhook.
     public void unhook() { hook.setPosition(0); } //need to test position
 
+    //Returns the lift motor for specification outside the class.
     public DcMotor liftMotor() { return liftMotor; }
 
+    //Returns the ratchet motor for specification outside the class.
     public DcMotor ratchetMotor() { return ratchetMotor; }
 
 
