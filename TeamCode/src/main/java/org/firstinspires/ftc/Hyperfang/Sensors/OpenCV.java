@@ -34,8 +34,11 @@ public class OpenCV {
     private Mat hierarchy;
     private List<MatOfPoint> contours = new ArrayList<>();
 
-    private Point cameraMidpoint;
     private Point cameraDimensions;
+    private Point cameraMidpoint;
+    private double pixelRep;
+    private double FOV = 76; //CHANGE EITHER CALCULATE OR INPUT
+    private static final double ppiMotoGPlay = 294;
 
     private boolean goldFound = false;
     private Point goldMidpoint;
@@ -57,11 +60,24 @@ public class OpenCV {
 
     //Makes sure our tracking is ready to go.
     public void activate(Bitmap img) {
-        phoneDimensions(getVuforia(img));
-        phoneMidpoint(getVuforia(img));
+        cameraDimensions(getVuforia(img));
     }
 
-    //Finding the silver minerals. (Note: Requires findBlobs())
+    //Initializes our location finding methods by finding our camera values.
+    private void cameraDimensions(Mat input) {
+        cameraDimensions = new Point(input.width(), input.height());
+        cameraMidpoint = new Point(cameraDimensions.x / 2.0, cameraDimensions.y / 2.0);
+
+        //Focal Length = X [mm]
+        //Calculates the Field of View of our camera.
+        //FOV = 2 * Math.atan(cameraDimensions.x /(FOCAL LENGTH * 2));
+        double diagCam = Math.sqrt(Math.pow(cameraDimensions.x, 2) + Math.pow(cameraDimensions.y, 2));
+
+        //Figuring out our pixel representation (angle per pixel).
+        pixelRep = FOV/diagCam;
+    }
+
+    //Finding the silver minerals. (Note: Requires findCircles())
     public void findSilver(Mat input) {
         //Step 1. Resizing our picture in order to decrease runtime.
         Mat resize = input;
@@ -75,7 +91,7 @@ public class OpenCV {
         Mat blur = resizeOutput;
         Imgproc.GaussianBlur(blur, blurOutput, new Size(7.9, 7.9), 0);
 
-        //Step 3. Converting our color space from RGBA to HSV, and then thresholding it.
+        //Step 3. Converting our color space from RGBA to HSV, and then threshold it.
         Mat hsv = new Mat();
         Imgproc.cvtColor(blurOutput, hsv, Imgproc.COLOR_RGB2HSV);
         Core.inRange(hsv, new Scalar(0, 0, 172), new Scalar(180, 60, 255), hsvOutput);
@@ -97,6 +113,7 @@ public class OpenCV {
         Imgproc.findContours(findContours, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
     }
 
+    //Applies filters to locate the gold mineral.
     public void findGold(Mat input, Telemetry telemetry) {
         goldFound = false;
 
@@ -112,7 +129,7 @@ public class OpenCV {
         Mat blur = resizeOutput;
         Imgproc.GaussianBlur(blur, blurOutput, new Size(7, 7), 0);
 
-        //Step 3. Converting our color space from RGBA to HSV, and then thresholding it.
+        //Step 3. Converting our color space from RGBA to HSV, and then threshold it.
         Mat hsv = new Mat();
         Imgproc.cvtColor(blurOutput, hsv, Imgproc.COLOR_RGB2HSV);
         Core.inRange(hsv, new Scalar(0, 124, 80), new Scalar(180, 255, 255), hsvOutput);
@@ -135,11 +152,12 @@ public class OpenCV {
 
         findSquares(contours, 1000);
         if (goldFound) {
-            telemetry.addData("Cube: ", Arrays.toString(gold3D.getPoints()));
+            telemetry.addData("Cube:", Arrays.toString(gold3D.getPoints()));
         }
     }
 
     //Iterates through given contours and locates all of the square shapes of a certain size.
+    //Then returns the location of squares and our angle in relation to the object.
     private void findSquares(List<MatOfPoint> contours, double minArea) {
         for (int i = 0; i < contours.size(); i++) {
             MatOfPoint contour = contours.get(i);
@@ -166,23 +184,23 @@ public class OpenCV {
                 //Formula to find depth = (5.08*2622)/Pixels OR (13,319.76)/Pixels of width
                 //(Screen width x Distance)/ Focal Length =  Width in CM of screen at distance of cube
                 double distanceZ = (13319.76) / rect.width;
-                double ScreenWidthAtCube = (cameraDimensions.x * distanceZ) / 2622;
 
-                //NEWX NEEDS TO BE FIXED AND THE EQUATION WILL WORK.
-                double convRatioX = cameraDimensions.x / ScreenWidthAtCube;
-                double newX = goldMidpoint.x * convRatioX;
+                //Distance from the middle of the object to the camera.
+                double xDiff = cameraMidpoint.x - goldMidpoint.x;
+                double yDiff = cameraMidpoint.y - goldMidpoint.y;
+                double distance = Math.sqrt(Math.pow(xDiff,2) + Math.pow(yDiff, 2));
 
-                /*double hypotenuse = Math.sqrt((distanceZ * distanceZ) + (newX * newX)); UNNEEDED
-                double angle = Math.acos(distanceZ / hypotenuse); HYPOTENUSE IS UNNEEDED */
-                double angle = Math.toDegrees(Math.atan(newX / distanceZ));
+                //Calculating our angle using our angle to pixel representation value and distance.
+                double angle = pixelRep * distance;
 
                 //Returning our (X, Z, Angle) Coordinates.
-                gold3D = new Point3D(newX, distanceZ, angle);
+                gold3D = new Point3D(goldMidpoint.x, distanceZ, angle);
             }
         }
     }
 
-    //Returns the angle amount to turn. Used in relative turning.
+    //Returns the angle amount to turn based on midpoint distance from object.
+    //Used with relative turning.
     public double xMCP(double tolerance, double offset) {
         //The Pixel Value when gold is in the phone middle can be within tolerance.
         //Robot offset is the value are phone is offset when aimed at the cube.
@@ -195,6 +213,7 @@ public class OpenCV {
         return 0;
     }
 
+    //Returns whether we have found our gold.
     public boolean getGold() {
         return goldFound;
     }
@@ -206,38 +225,35 @@ public class OpenCV {
         return mat;
     }
 
-    private void phoneMidpoint(Mat input) {
-        cameraMidpoint = new Point(input.width() / 2.0, input.height() / 2.0);
-    }
-
-    private void phoneDimensions(Mat input) {
-        cameraDimensions = new Point(input.width(), input.height());
-    }
-
+    //Points class which can hold points in a 3D Point (x,y,z) format.
     private class Point3D {
         private double x;
         private double y;
         private double z;
 
-        public Point3D() {
+        //Default Constructor
+        Point3D() {
             this.x = 0;
             this.y = 0;
             this.z = 0;
         }
 
-        public Point3D(double x, double y, double z) {
+        //Parameter Constructor which sets our points.
+        Point3D(double x, double y, double z) {
             this.x = x;
             this.y = y;
             this.z = z;
         }
 
-        public void setPoints(double x, double y, double z) {
+        //Sets our points.
+         void setPoints(double x, double y, double z) {
             this.x = x;
             this.y = y;
             this.z = z;
         }
 
-        public double[] getPoints() {
+        //Returns our points
+        double[] getPoints() {
             return new double[]{x, y, z};
         }
     }
