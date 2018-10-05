@@ -8,6 +8,7 @@ import com.vuforia.PIXEL_FORMAT;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.Camera;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -27,29 +28,25 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 /**
- * This 2018-2019 OpMode illustrates the basics of using the Vuforia localizer to determine
- * positioning and orientation of robot on the FTC field.
- * The code is structured as a LinearOpMode
- * <p>
  * Vuforia uses the phone's camera to inspect it's surroundings, and attempt to locate target images.
- * <p>
+ *
  * When images are located, Vuforia is able to determine the position and orientation of the
  * image relative to the camera.  This sample code than combines that information with a
  * knowledge of where the target images are on the field, to determine the location of the camera.
- * <p>
+ *
  * This example assumes a "square" field configuration where the red and blue alliance stations
  * are on opposite walls of each other.
- * <p>
+ *
  * From the Audience perspective, the Red Alliance station is on the right and the
  * Blue Alliance Station is on the left.
- * <p>
+ *
  * The four vision targets are located in the center of each of the perimeter walls with
  * the images facing inwards towards the robots:
  * - BlueRover is the Mars Rover image target on the wall closest to the blue alliance
  * - RedFootprint is the Lunar Footprint target on the wall closest to the red alliance
  * - FrontCraters is the Lunar Craters image target on the wall closest to the audience
  * - BackSpace is the Deep Space image target on the wall farthest from the audience
- * <p>
+ *
  * A final calculation then uses the location of the camera on the robot to determine the
  * robot's location and orientation on the field.
  */
@@ -91,7 +88,6 @@ public class Vuforia {
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
         initTrack();
     }
 

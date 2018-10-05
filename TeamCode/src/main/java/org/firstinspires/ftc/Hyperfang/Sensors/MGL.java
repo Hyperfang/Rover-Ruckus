@@ -8,6 +8,7 @@ public class MGL {
     private DigitalChannel MGL;
     private boolean changeLock;
 
+    //Initializes our Magnetic Limit Switch.
     public MGL(HardwareMap hardwareMap, String param) {
         MGL = hardwareMap.get(DigitalChannel.class, param);
         MGL.setMode(DigitalChannel.Mode.INPUT);
