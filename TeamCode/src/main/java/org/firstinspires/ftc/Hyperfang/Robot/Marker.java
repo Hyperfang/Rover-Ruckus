@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.Hyperfang.Robot;
 
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.Servo;
+
+/*
+    Created by Caleb.
+*/
 
 public class Marker {
 
@@ -9,12 +13,14 @@ public class Marker {
     private boolean isDropped = false;
 
     //Initializes our Marker object.
-    public Marker(HardwareMap hMap){
-        marker = hMap.get(Servo.class, "marker");
+    public Marker(OpMode opMode) {
+        marker = opMode.hardwareMap.get(Servo.class, "marker");
     }
 
     //Resets the marker arm to default position.
-    public void reset() { marker.setPosition(0); } //need to test position
+    public void reset() {
+        marker.setPosition(0);
+    } //need to test position
 
     //Drops the team marker and indicates we have dropped.
     //The marker should drop in one movement, and is considered dropped for the rest of execution.

@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.Hyperfang.Robot;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
@@ -21,15 +21,18 @@ public class Lift {
 
     private LEVEL pos;
 
+    private OpMode mOpMode;
+
     //Initializes the lift objects.
-    public Lift(HardwareMap hMap){
-        liftMotor = hMap.get(DcMotor.class, "lift");
-        ratchetMotor = hMap.get(DcMotor.class, "ratchet");
+    public Lift(OpMode opMode){
+        mOpMode = opMode;
+        liftMotor = mOpMode.hardwareMap.get(DcMotor.class, "lift");
+        ratchetMotor = mOpMode.hardwareMap.get(DcMotor.class, "ratchet");
         ratchetMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hook = hMap.get(Servo.class, "hook");
+        hook = mOpMode.hardwareMap.get(Servo.class, "hook");
 
-        mgl = new MGL(hMap, "mgl");
+        mgl = new MGL(opMode, "mgl");
         pos = LEVEL.GROUND;
     }
 
@@ -112,6 +115,5 @@ public class Lift {
 
     //Returns the ratchet motor for specification outside the class.
     public DcMotor ratchetMotor() { return ratchetMotor; }
-
 
 }

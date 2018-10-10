@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Lift;
-import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
 import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
@@ -51,7 +50,7 @@ public class AutoMain_Test extends OpMode {
         mInitTime.reset(); //Starting our initialization timer.
 
         //Instantiating our robot objects.
-        mLift = new Lift(hardwareMap);
+        mLift = new Lift(this);
         mVF = new Vuforia();
         mCV = new OpenCV();
 

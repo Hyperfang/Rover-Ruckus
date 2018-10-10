@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.Hyperfang.Sensors;
 
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -11,8 +11,8 @@ public class RangeSensor {
     private DistanceSensor sensor;
 
     //Initializes our Distance Sensor object.
-    public RangeSensor(String deviceName, HardwareMap hardwareMap) {
-        sensor = hardwareMap.get(DistanceSensor.class, deviceName);
+    public RangeSensor(String deviceName, OpMode opMode) {
+        sensor = opMode.hardwareMap.get(DistanceSensor.class, deviceName);
     }
 
     //Return our distance from an object to the sensor in millimeters.

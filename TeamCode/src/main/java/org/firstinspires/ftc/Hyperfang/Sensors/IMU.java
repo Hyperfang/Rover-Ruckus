@@ -3,7 +3,6 @@ package org.firstinspires.ftc.Hyperfang.Sensors;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -14,6 +13,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 import java.util.Locale;
+
+/*
+    Created by Caleb.
+*/
 
 public class IMU {
 
@@ -26,18 +29,18 @@ public class IMU {
     private BNO055IMU.Parameters parameters;
 
     //Initializes our IMU through just the gyroscope.
-    public IMU(HardwareMap hardwareMap) {
+    public IMU(OpMode opMode) {
         parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = opMode.hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
     }
 
     //Initializes our IMU through just the gyroscope.
-    public IMU(String deviceName, HardwareMap hardwareMap) {
+    public IMU(String deviceName, OpMode opMode) {
         parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        imu = hardwareMap.get(BNO055IMU.class, deviceName);
+        imu = opMode.hardwareMap.get(BNO055IMU.class, deviceName);
         imu.initialize(parameters);
     }
 

@@ -1,7 +1,11 @@
 package org.firstinspires.ftc.Hyperfang.Sensors;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+
+/*
+    Created by Caleb.
+*/
 
 public class MGL {
 
@@ -9,8 +13,8 @@ public class MGL {
     private boolean changeLock;
 
     //Initializes our Magnetic Limit Switch.
-    public MGL(HardwareMap hardwareMap, String param) {
-        MGL = hardwareMap.get(DigitalChannel.class, param);
+    public MGL(OpMode opMode, String param) {
+        MGL = opMode.hardwareMap.get(DigitalChannel.class, param);
         MGL.setMode(DigitalChannel.Mode.INPUT);
         changeLock = true;
     }
