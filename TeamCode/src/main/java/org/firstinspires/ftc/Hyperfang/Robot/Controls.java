@@ -10,8 +10,8 @@ public class Controls {
     private double linear;
     private double turn;
     private boolean slowMode = false;
-    private boolean slowButton;
-    private boolean resetButton;
+    private boolean slowButton = false;
+    private boolean resetButton = false;
 
     private OpMode mOpMode;
 
@@ -27,7 +27,7 @@ public class Controls {
     //Drive Method
     //Arcade Mode uses left stick to go forward, and right stick to turn.
     public void moveArcade() {
-        linear = mOpMode.gamepad1.left_stick_y;
+        linear = -mOpMode.gamepad1.left_stick_y;
         turn = mOpMode.gamepad1.right_stick_x;
         base.move(linear, turn);
     }
@@ -77,19 +77,20 @@ public class Controls {
     public void toggleSpeed(boolean slow, boolean reset) {
         mOpMode.gamepad1.setJoystickDeadzone(.05f);
         ElapsedTime delay = new ElapsedTime();
-        if (delay.time() > .25) {  //Allows time for button release
+        if (delay.milliseconds() > 250) {  //Allows time for button release.
             if (slow && !slowMode) { //Slow is the slow mode button.
                 mOpMode.gamepad1.setJoystickDeadzone(.1f);
-                delay.reset();
                 slowMode = true;
+                delay.reset();
             } else if (slow) { //Setting to normal mode.
                 mOpMode.gamepad1.setJoystickDeadzone(.1f);
                 delay.reset();
                 slowMode = false;
+                delay.reset();
             } else if (reset) { //Reset is the reset button
                 mOpMode.gamepad1.setJoystickDeadzone(.1f);
-                delay.reset();
                 slowMode = false;
+                delay.reset();
             }
         }
 

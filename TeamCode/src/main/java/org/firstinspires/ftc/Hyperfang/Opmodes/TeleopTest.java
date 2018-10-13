@@ -15,7 +15,6 @@ public class TeleopTest extends OpMode {
     private ElapsedTime runtime = new ElapsedTime();
     private Controls controls;
 
-
     @Override
     public void init() {
         controls = new Controls(this);
@@ -31,7 +30,6 @@ public class TeleopTest extends OpMode {
 
     }
 
-
     @Override
     public void loop() {
         controls.setSpeedButtons(gamepad1.a, gamepad1.b);
@@ -40,6 +38,7 @@ public class TeleopTest extends OpMode {
         // Show the elapsed game time and wheel power.
         telemetry.addData("Drive Variables", Arrays.toString(controls.getDriveValue()));
         telemetry.addData("Half Speed toggle is : ", controls.getSpeedToggle());
+        telemetry.addData("Toggles : ", "Slow :, Reset : ", controls.getSpeedToggle());
         telemetry.addData("Status", "Run Time: " + runtime.toString());
     }
 

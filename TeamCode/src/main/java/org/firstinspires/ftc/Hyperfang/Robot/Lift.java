@@ -12,12 +12,12 @@ public class Lift {
     public enum LEVEL {
         GROUND,
         LATCH,
-        TOP
+        TOP,
     }
 
     private DcMotor liftMotor;
     private DcMotor ratchetMotor;
-    private Servo hook; //Possibly change to continuous to ease teleop.
+    private Servo hook; //Possibly change to continuous to ease Tele-Op.
 
     private LEVEL pos;
 
@@ -41,17 +41,17 @@ public class Lift {
     public void moveTo(LEVEL lvl, double power, DcMotor motor) {
         switch (lvl) {
             case GROUND:
-                if(pos == lvl.GROUND || power != Math.abs(power)){break;}
+                if(pos == lvl || power != Math.abs(power)){break;}
                 move(power, motor);
                 pos = LEVEL.GROUND;
                 break;
             case LATCH:
-                if(pos == lvl.LATCH){break;}
+                if(pos == lvl){break;}
                 move(power, motor);
                 pos = LEVEL.LATCH;
                 break;
             case TOP:
-                if(pos == lvl.TOP || power == Math.abs(power)){break;}
+                if(pos == lvl || power == Math.abs(power)){break;}
                 move(power, motor);
                 pos = LEVEL.TOP;
                 break;
@@ -63,9 +63,16 @@ public class Lift {
     public void move(double power, DcMotor motor) {
         switch (pos) {
             case GROUND:
+
+                //Don't move down if we are at the lowest level.
                 if (power > 0) {
                     motor.setPower(power);
                     if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
+                }
+
+                //If we wish to move down from mid-level, make sure we aren't at the base.
+                if (power < 0 && !mgl.isTouched()) {
+                    motor.setPower(power);
                 }
                 break;
 
@@ -80,9 +87,15 @@ public class Lift {
                 break;
 
             case TOP:
+                //Don't move up if we are at the highest level.
                 if (power < 0) {
                     motor.setPower(power);
                     if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
+                }
+
+                //If we wish to move up from mid-level, make sure we aren't at the base.
+                if (power > 0 && !mgl.isTouched()) {
+                    motor.setPower(power);
                 }
                 break;
         }
