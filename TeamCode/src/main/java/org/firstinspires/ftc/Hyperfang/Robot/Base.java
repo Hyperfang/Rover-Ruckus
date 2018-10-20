@@ -3,10 +3,9 @@ package org.firstinspires.ftc.Hyperfang.Robot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
-import org.firstinspires.ftc.Hyperfang.Sensors.RangeSensor;
+import org.firstinspires.ftc.Hyperfang.Sensors.Range;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
 public class Base {
@@ -17,7 +16,7 @@ public class Base {
     private DcMotor backRight;
 
     private IMU imu;
-    private RangeSensor rSensor;
+    private Range rSensor;
 
     private static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // Rev Orbital 40:1
     private static final double     DRIVE_GEAR_REDUCTION    = 20 / 15.0;// Drive-Train Gear Ratio.
@@ -28,8 +27,8 @@ public class Base {
     private double curAng;
     private double curDis;
     private static final double encTolerance = 100;
-    private static final double turnTolerance = 1;
-    private static final double rangeTolerance = .35;
+    private static final double turnTolerance = 6;
+    private static final double rangeTolerance = 1;
 
     private OpMode mOpMode;
 
@@ -45,7 +44,7 @@ public class Base {
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
         imu = new IMU(opMode);
-        rSensor = new RangeSensor("range", opMode);
+        rSensor = new Range("range", opMode);
 
         initPos();
     }
@@ -122,8 +121,8 @@ public class Base {
     }
 
     //Returns whether our encoder is not in the desired position. Useful for loops.
-    public boolean setEnc(int pos) {
-        return Math.abs(curEnc - pos) < encTolerance;
+    private boolean setEnc(int pos) {
+        return Math.abs(curEnc - pos) > encTolerance;
     }
 
     //Stops the robot.
@@ -136,18 +135,18 @@ public class Base {
 
     //Moves our robot based on linear (forward/backwards) and turn values (right/left)
     public void move(double linear, double turn) {
-        backLeft.setPower(Range.clip(linear + turn, -1.0, 1.0));
-        backRight.setPower(Range.clip(linear - turn, -1.0, 1.0));
-        frontLeft.setPower(Range.clip(linear + turn, -1.0, 1.0));
-        frontRight.setPower(Range.clip(linear - turn, -1.0, 1.0));
+        backLeft.setPower(com.qualcomm.robotcore.util.Range.clip(linear + turn, -1.0, 1.0));
+        backRight.setPower(com.qualcomm.robotcore.util.Range.clip(linear - turn, -1.0, 1.0));
+        frontLeft.setPower(com.qualcomm.robotcore.util.Range.clip(linear + turn, -1.0, 1.0));
+        frontRight.setPower(com.qualcomm.robotcore.util.Range.clip(linear - turn, -1.0, 1.0));
     }
 
     //Moves our robot based on left and right powers.
     public void setPower(double left, double right) {
-        backLeft.setPower(Range.clip(left, -1.0, 1.0));
-        backRight.setPower(Range.clip(right, -1.0, 1.0));
-        frontLeft.setPower(Range.clip(left, -1.0, 1.0));
-        frontRight.setPower(Range.clip(right, -1.0, 1.0));
+        backLeft.setPower(com.qualcomm.robotcore.util.Range.clip(left, -1.0, 1.0));
+        backRight.setPower(com.qualcomm.robotcore.util.Range.clip(right, -1.0, 1.0));
+        frontLeft.setPower(com.qualcomm.robotcore.util.Range.clip(left, -1.0, 1.0));
+        frontRight.setPower(com.qualcomm.robotcore.util.Range.clip(right, -1.0, 1.0));
     }
 
     //Future: Remove power parameters from the turn methods.
@@ -176,8 +175,8 @@ public class Base {
             }
 
             //Using the error to calculate our power.
-            newPow = pow * (Math.abs(error) / 70);
-            if (newPow < .05) newPow = .05;
+            newPow = pow * (Math.abs(error) / 90);
+            if (newPow < .075) newPow = .075;
 
             //Insert I and D here.
 
@@ -196,12 +195,17 @@ public class Base {
         return 0;
     }
 
-
     //Turns to a desired angle in the fastest path using the IMU.
-    //Relative (Based on IMU position) where positive turns right.
+    //RELATIVE (Based on IMU position) where positive turns right.
     //Uses a P to control precision.
     public double turnRelative(double pow, double deg) {
-        //curAng is the current position of our robot. NEED TO FIGURE OUT WHAT ANGLE TO USE.
+        //After we have figured out the "absolute angle", we can turn to relative.
+        return turnAbsolute(pow, deg);
+    }
+
+    //Calculates a desired angle to turn to relatively.
+    public double calcRelative(double deg) {
+        //curAng is the current position of our robot.
         curAng = imu.getHeading();
 
         //This finds the new "absolute angle" that we would need to turn to.
@@ -216,49 +220,56 @@ public class Base {
             }
         }
 
-        //After we have figured out the "absolute angle", we can turn.
-        return turnAbsolute(pow, rDeg);
+        //After we have figured out the "absolute angle", we can use it with other methods.
+        return rDeg;
     }
 
     //Returns whether our angle is not in the desired position. Useful for loops.
     public boolean setTurn(double deg) {
-        return Math.abs(curDis - deg) < turnTolerance;
+        return Math.abs(curAng - deg) > turnTolerance;
     }
 
     //Moves to a position based on the distance from our range sensor.
     //Uses a P to control precision.
-    public void rangeMove(double inAway, RangeSensor sensor) { //Moving forward/backwards using a Range Sensor.
-        curDis = sensor.getDistanceIN();
+    public double rangeMove(double inAway) { //Moving forward/backwards using a Range Sensor.
+        curDis = rSensor.getDistanceIN();
+        mOpMode.telemetry.addData("curdis, initial,", curDis);
         double pow;
         double localRange;
 
-        //If sensor isn't in the desired position, run.
-        if (setRange(inAway)) {
-            localRange = sensor.getDistanceIN();
+        if (curDis != 0) {
+            //If sensor isn't in the desired position, run.
+            if (setRange(inAway)) {
+                localRange = rSensor.getDistanceIN();
 
-            //If a faulty value is detected, don't update our used variable till a good one is found.
-            while ((Double.isNaN(localRange) || (localRange > 2000))) {
-                localRange = sensor.getDistanceIN();
-            }
+                //If a faulty value is detected, don't update our used variable till a good one is found.
+                while ((Double.isNaN(localRange) || (localRange > 80))) {
+                    localRange = rSensor.getDistanceIN();
+                }
 
-            curDis = localRange; //Sets all working and usable values into a variable we can utilize.
+                curDis = localRange; //Sets all working and usable values into a variable we can utilize.
+                mOpMode.telemetry.addData("Range: ", curDis);
+                //Input P I D here
+                pow = .2;
 
-            //Input P I D here
-            pow = 0;
-
-            if (curDis > inAway) { //If the sensor value is greater than the target, move forward.
-                move(pow, 0);
-            }
-            if (curDis < inAway) { //If the sensor value is lower than than the target, move backwards.
-                move(pow, 0);
+                if (curDis > inAway) { //If the sensor value is greater than the target, move backwards.
+                    return -pow;
+                }
+                if (curDis < inAway) { //If the sensor value is lower than than the target, move forwards.
+                    return pow;
+                }
             }
         }
-        stop();
+        return 0;
     }
 
     //Returns whether our distance is not in the desired position. Useful for loops.
     public boolean setRange(double inAway) {
-        return Math.abs(curDis - inAway) < rangeTolerance;
+        return Math.abs(curDis - inAway) > rangeTolerance;
+    }
+
+    public boolean isRangeTimeout() {
+        return rSensor.isTimeout();
     }
 
     //Vuforia Turn.

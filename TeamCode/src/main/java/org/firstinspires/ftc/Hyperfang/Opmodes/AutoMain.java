@@ -1,13 +1,16 @@
 package org.firstinspires.ftc.Hyperfang.Opmodes;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Robot.Lift;
 import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
-public class AutoMain_Test extends OpMode {
+@Autonomous (name="Main", group="Iterative Opmode")
+public class AutoMain extends OpMode {
 
     //List of system states. MOVE TO OWN CLASS?
     private enum State {
@@ -15,6 +18,7 @@ public class AutoMain_Test extends OpMode {
         LAND,
         FINDMIN,
         SAMPLE,
+        FINDNAV,
         LOGNAV,
         DEPOT_MARKER,
         DEPOSITMIN,
@@ -25,6 +29,7 @@ public class AutoMain_Test extends OpMode {
     private Lift mLift;
     private Vuforia mVF;
     private OpenCV mCV;
+    private Base mBase;
 
     private State mState; //Current state of the state machine.
     private ElapsedTime StateTime;
@@ -40,7 +45,7 @@ public class AutoMain_Test extends OpMode {
     private ElapsedTime mInitTime = new ElapsedTime(); //Time it takes to initialize.
 
     //--------------------------------------------------------------------------------------------------
-    public AutoMain_Test() {
+    public AutoMain() {
     } //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
@@ -50,6 +55,7 @@ public class AutoMain_Test extends OpMode {
         mInitTime.reset(); //Starting our initialization timer.
 
         //Instantiating our robot objects.
+        mBase = new Base(this);
         mLift = new Lift(this);
         mVF = new Vuforia();
         mCV = new OpenCV();
@@ -104,7 +110,7 @@ public class AutoMain_Test extends OpMode {
                 if (mLift.getPosition().equals("GROUND")) {
                     while (!mCV.getGold()) { //Unnecessary loop?
                         mCV.findGold(mCV.getVuforia(mVF.getBitmap()), telemetry); //EDIT: May need to add loop.
-                        //base.turn(right) until block is found
+                        mBase.turnRelative(.5,15);
                     }
                     setState(State.SAMPLE);
                 } else {
@@ -113,15 +119,22 @@ public class AutoMain_Test extends OpMode {
 
             case SAMPLE:
                 if (mCV.getGold()) {
-                    //base.turnToGold(); Lineup Manip with gold
+                    mBase.turnRelative(.5, mCV.getGoldAngle());
                     //base.move(); move.forward(range.of.cube - manip.size)
                     //extend/deploy manip
                     //intake gold             manip.intake.on
                     //retract/undeplpoy manip.intake.off
-                    mVF.getVuMark();
-                    //turn left
                     setState(State.LOGNAV);
                 } else {
+                }
+                break;
+
+            case FINDNAV:
+                if (!mVF.isVisible()) {
+                    mBase.move(0, .25);
+                    mVF.getVuMark();
+                } else {
+                    setState(State.LOGNAV);
                 }
                 break;
 
@@ -160,6 +173,8 @@ public class AutoMain_Test extends OpMode {
                 break;
 
             case PARK:
+                //Locate current position
+                //Move to crater
         }
     }
 

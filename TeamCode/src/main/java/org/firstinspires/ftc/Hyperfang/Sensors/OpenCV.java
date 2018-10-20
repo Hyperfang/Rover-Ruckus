@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class OpenCV {
-
     private Mat resizeOutput;
     private Mat blurOutput;
     private Mat hsvOutput;
@@ -216,6 +215,11 @@ public class OpenCV {
     //Returns whether we have found our gold.
     public boolean getGold() {
         return goldFound;
+    }
+
+    //Returns the angle from the gold.
+    public double getGoldAngle() {
+        return gold3D.z;
     }
 
     //Converting a bitmap received from Vuforia to a mat object we can utilize.

@@ -32,7 +32,7 @@ public class Lift {
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         hook = mOpMode.hardwareMap.get(Servo.class, "hook");
 
-        mgl = new MGL(opMode, "mgl");
+        mgl = new MGL(opMode);
         pos = LEVEL.GROUND;
     }
 

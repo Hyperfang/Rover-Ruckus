@@ -6,18 +6,18 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-public class RangeSensor {
+public class Range {
 
     private DistanceSensor sensor;
 
     //Initializes our Distance Sensor object.
-    public RangeSensor(String deviceName, OpMode opMode) {
+    public Range(String deviceName, OpMode opMode) {
         sensor = opMode.hardwareMap.get(DistanceSensor.class, deviceName);
     }
 
     //Return our distance from an object to the sensor in millimeters.
     public double getDistanceMM() {
-        return sensor.getDistance(DistanceUnit.CM);
+        return sensor.getDistance(DistanceUnit.MM);
     }
 
     //Return our distance from an object to the sensor in centimeters.

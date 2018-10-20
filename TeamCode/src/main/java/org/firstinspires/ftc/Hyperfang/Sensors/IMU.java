@@ -40,12 +40,13 @@ public class IMU {
     public IMU(String deviceName, OpMode opMode) {
         parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        initAccel(1000);
         imu = opMode.hardwareMap.get(BNO055IMU.class, deviceName);
         imu.initialize(parameters);
     }
 
     //Initializing the IMU with acceleration.
-    public void initAccel(int msPollInt) {
+    private void initAccel(int msPollInt) {
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
         parameters.loggingEnabled = true;

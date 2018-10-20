@@ -6,13 +6,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Controls;
 
-import java.util.Arrays;
 
-
-@TeleOp(name="Teleop Test", group="Iterative Opmode")
-public class TeleopTest extends OpMode {
+@TeleOp(name="GAT", group="Iterative Opmode")
+public class GAT extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime slowDelay = new ElapsedTime();
+    private ElapsedTime revDelay = new ElapsedTime();
     private Controls controls;
 
     @Override
@@ -32,16 +32,16 @@ public class TeleopTest extends OpMode {
 
     @Override
     public void loop() {
-        controls.setSpeedButtons(gamepad1.a, gamepad1.b);
-        controls.moveArcade();
+        controls.moveGAT();
+        controls.setDirectionButton(gamepad1.y, revDelay);
+        controls.setSpeedButtons(gamepad1.a, gamepad1.b, slowDelay);
+
 
         // Show the elapsed game time and wheel power.
-        telemetry.addData("Drive Variables", Arrays.toString(controls.getDriveValue()));
-        telemetry.addData("Half Speed toggle is : ", controls.getSpeedToggle());
-        telemetry.addData("Toggles : ", "Slow :, Reset : ", controls.getSpeedToggle());
+        telemetry.addData("Half Mode: ", controls.getSpeedToggle());
+        telemetry.addData("Reverse Mode: ", controls.getDirectionToggle());
         telemetry.addData("Status", "Run Time: " + runtime.toString());
     }
-
 
     @Override
     public void stop() {
