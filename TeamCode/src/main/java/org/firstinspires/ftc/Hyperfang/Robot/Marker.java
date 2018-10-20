@@ -25,7 +25,7 @@ public class Marker {
     //Drops the team marker and indicates we have dropped.
     //The marker should drop in one movement, and is considered dropped for the rest of execution.
     public void drop() {
-        marker.setPosition(1);  //need to test position
+        marker.setPosition(.5);  //need to test position
         isDropped = true;
     }
 

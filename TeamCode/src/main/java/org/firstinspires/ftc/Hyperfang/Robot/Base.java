@@ -18,10 +18,10 @@ public class Base {
     private IMU imu;
     private Range rSensor;
 
-    private static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // Rev Orbital 40:1
-    private static final double     DRIVE_GEAR_REDUCTION    = 20 / 15.0;// Drive-Train Gear Ratio.
-    private static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // Andymark Stealth/Omni Wheels
-    private static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
+    private static final double COUNTS_PER_MOTOR_REV    = 1440 ;    // Rev Orbital 40:1
+    private static final double DRIVE_GEAR_REDUCTION    = 20 / 15.0;// Drive-Train Gear Ratio.
+    private static final double WHEEL_DIAMETER_INCHES   = 4.0 ;     // Andymark Stealth/Omni Wheels
+    private static final double COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
 
     private double curEnc;
     private double curAng;
@@ -72,6 +72,30 @@ public class Base {
         frontRight.setZeroPowerBehavior(mode);
     }
 
+    //Moves our robot based on left and right powers.
+    public void setPower(double left, double right) {
+        backLeft.setPower(com.qualcomm.robotcore.util.Range.clip(left, -1.0, 1.0));
+        backRight.setPower(com.qualcomm.robotcore.util.Range.clip(right, -1.0, 1.0));
+        frontLeft.setPower(com.qualcomm.robotcore.util.Range.clip(left, -1.0, 1.0));
+        frontRight.setPower(com.qualcomm.robotcore.util.Range.clip(right, -1.0, 1.0));
+    }
+
+    //Moves our robot based on linear (forward/backwards) and turn values (right/left)
+    public void move(double linear, double turn) {
+        backLeft.setPower(com.qualcomm.robotcore.util.Range.clip(linear + turn, -1.0, 1.0));
+        backRight.setPower(com.qualcomm.robotcore.util.Range.clip(linear - turn, -1.0, 1.0));
+        frontLeft.setPower(com.qualcomm.robotcore.util.Range.clip(linear + turn, -1.0, 1.0));
+        frontRight.setPower(com.qualcomm.robotcore.util.Range.clip(linear - turn, -1.0, 1.0));
+    }
+
+    //Stops the robot.
+    public void stop() {
+        backLeft.setPower(0);
+        backRight.setPower(0);
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+    }
+
     //Resets the encoder count.
     public void resetEncoders() {
         backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -107,46 +131,30 @@ public class Base {
     }
 
     //Moves the robot to a certain position using encoders.
-    public void moveEncoders(int pos, double power) {
-        resetEncoders();
+    //resetEncoders() before running this in a loop.
+    public double moveEncoders(int pos) {
+        double p = 90; //Change
+
         setModeEncoder(DcMotor.RunMode.RUN_TO_POSITION);
         setEncoderPosition(pos);
         curEnc = getEncoderPosition();
 
         if (setEnc(pos)) {
+            curEnc = getEncoderPosition();
+
             //Insert PID HERE
-            move(power, 0);
+            double power = curEnc/p;
+
+            if (curEnc < pos) return power;
+            if (curEnc > pos) return -power;
+
         }
-        stop();
+        return 0;
     }
 
     //Returns whether our encoder is not in the desired position. Useful for loops.
     private boolean setEnc(int pos) {
         return Math.abs(curEnc - pos) > encTolerance;
-    }
-
-    //Stops the robot.
-    public void stop() {
-        backLeft.setPower(0);
-        backRight.setPower(0);
-        frontLeft.setPower(0);
-        frontRight.setPower(0);
-    }
-
-    //Moves our robot based on linear (forward/backwards) and turn values (right/left)
-    public void move(double linear, double turn) {
-        backLeft.setPower(com.qualcomm.robotcore.util.Range.clip(linear + turn, -1.0, 1.0));
-        backRight.setPower(com.qualcomm.robotcore.util.Range.clip(linear - turn, -1.0, 1.0));
-        frontLeft.setPower(com.qualcomm.robotcore.util.Range.clip(linear + turn, -1.0, 1.0));
-        frontRight.setPower(com.qualcomm.robotcore.util.Range.clip(linear - turn, -1.0, 1.0));
-    }
-
-    //Moves our robot based on left and right powers.
-    public void setPower(double left, double right) {
-        backLeft.setPower(com.qualcomm.robotcore.util.Range.clip(left, -1.0, 1.0));
-        backRight.setPower(com.qualcomm.robotcore.util.Range.clip(right, -1.0, 1.0));
-        frontLeft.setPower(com.qualcomm.robotcore.util.Range.clip(left, -1.0, 1.0));
-        frontRight.setPower(com.qualcomm.robotcore.util.Range.clip(right, -1.0, 1.0));
     }
 
     //Future: Remove power parameters from the turn methods.

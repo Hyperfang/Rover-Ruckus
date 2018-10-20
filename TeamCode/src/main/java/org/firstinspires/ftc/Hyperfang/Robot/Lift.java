@@ -17,7 +17,9 @@ public class Lift {
 
     private DcMotor liftMotor;
     private DcMotor ratchetMotor;
+    private Servo ratchetServo;
     private Servo hook; //Possibly change to continuous to ease Tele-Op.
+
 
     private LEVEL pos;
 
@@ -26,11 +28,12 @@ public class Lift {
     //Initializes the lift objects.
     public Lift(OpMode opMode){
         mOpMode = opMode;
-        liftMotor = mOpMode.hardwareMap.get(DcMotor.class, "lift");
+        liftMotor = mOpMode.hardwareMap.get(DcMotor.class, "vLift");
         ratchetMotor = mOpMode.hardwareMap.get(DcMotor.class, "ratchet");
         ratchetMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         hook = mOpMode.hardwareMap.get(Servo.class, "hook");
+        ratchetServo = mOpMode.hardwareMap.get(Servo.class, "rServo");
 
         mgl = new MGL(opMode);
         pos = LEVEL.GROUND;
@@ -107,6 +110,13 @@ public class Lift {
         ratchetMotor.setPower(0);
     }
 
+    //Sets the position of the ratchet based on whether we want it move-able or stopped.
+    //"move" sets it in a state that is ready to be moved. "stop" disallows movement.
+    public void setRatchet(String pos) {
+        if (pos.equals("move")) ratchetServo.setPosition(.5);
+        if (pos.equals("stop")) ratchetServo.setPosition(0);
+    }
+
     //Sets the position of our lift.
     public void setPosition(LEVEL position) {
         pos = position;
@@ -118,10 +128,10 @@ public class Lift {
     }
 
     //Moves the hook to a position which we can hook.
-    public void hook() { hook.setPosition(1); } //need to test position
+    public void hook() { hook.setPosition(1); } //need to test position.
 
     //Moves the hook to a position which we can unhook.
-    public void unhook() { hook.setPosition(0); } //need to test position
+    public void unhook() { hook.setPosition(0); } //need to test position.
 
     //Returns the lift motor for specification outside the class.
     public DcMotor liftMotor() { return liftMotor; }
