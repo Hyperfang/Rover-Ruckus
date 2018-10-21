@@ -12,7 +12,7 @@ import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 @Autonomous (name="Main", group="Iterative Opmode")
 public class AutoMain extends OpMode {
 
-    //List of system states. MOVE TO OWN CLASS?
+    //List of system states.
     private enum State {
         INITIAL,
         LAND,
@@ -58,7 +58,7 @@ public class AutoMain extends OpMode {
         mBase = new Base(this);
         mLift = new Lift(this);
         mVF = new Vuforia();
-        mCV = new OpenCV();
+        mCV = new OpenCV(this);
 
         //Indicates that initialization is complete.
         telemetry.addData("Initialized", "in " + mInitTime.milliseconds() + "ms");
@@ -108,8 +108,8 @@ public class AutoMain extends OpMode {
 
             case FINDMIN:
                 if (mLift.getPosition().equals("GROUND")) {
-                    while (!mCV.getGold()) { //Unnecessary loop?
-                        mCV.findGold(mCV.getVuforia(mVF.getBitmap()), telemetry); //EDIT: May need to add loop.
+                    while (!mCV.isGoldFound()) { //Unnecessary loop?
+                        mCV.findGold(mCV.getVuforia(mVF.getBitmap())); //EDIT: May need to add loop.
                         mBase.turnRelative(.5,15);
                     }
                     setState(State.SAMPLE);
@@ -118,7 +118,8 @@ public class AutoMain extends OpMode {
                 break;
 
             case SAMPLE:
-                if (mCV.getGold()) {
+                OpenCV.Position pos = mCV.sample(mCV.getVuforia(mVF.getBitmap()));
+                if (mCV.isGoldFound()) {
                     mBase.turnRelative(.5, mCV.getGoldAngle());
                     //base.move(); move.forward(range.of.cube - manip.size)
                     //extend/deploy manip

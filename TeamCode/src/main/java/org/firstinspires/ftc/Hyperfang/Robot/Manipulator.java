@@ -4,6 +4,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+/*
+    Created by Caleb.
+*/
+
 public class Manipulator {
 
     private OpMode mOpMode;
@@ -14,7 +18,6 @@ public class Manipulator {
     private Servo leftIntake;
     private Servo rightIntake;
 
-    //NEEDS CHANGING
     private static final double COUNTS_PER_MOTOR_REV = 1440 ; // Rev Orbital 40:1
     private static final double DIAMETER_INCHES   = 1.025; // Spool
     private static final double COUNTS_PER_INCH   = (COUNTS_PER_MOTOR_REV) / (DIAMETER_INCHES * 3.1415);

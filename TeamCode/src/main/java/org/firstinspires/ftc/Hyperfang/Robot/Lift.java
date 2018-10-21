@@ -39,27 +39,37 @@ public class Lift {
         pos = LEVEL.GROUND;
     }
 
-    //TODO create loop to set appropriate power to motor then stop once at desired position
-    //May need to edit.
+    //Moves to a specified position of the lift depending on the current position.
     public void moveTo(LEVEL lvl, double power, DcMotor motor) {
         switch (lvl) {
             case GROUND:
-                if(pos == lvl || power != Math.abs(power)){break;}
-                move(power, motor);
-                pos = LEVEL.GROUND;
+                if(!pos.equals(lvl)) move(power, motor);
+
+                if (pos.equals(lvl)) {
+                    motor.setPower(0);
+                    setPosition(LEVEL.GROUND);
+                    break;
+                }
                 break;
             case LATCH:
-                if(pos == lvl){break;}
-                move(power, motor);
-                pos = LEVEL.LATCH;
+                if(!pos.equals(lvl)) move(power, motor);
+
+                if (pos.equals(lvl)) {
+                    motor.setPower(0);
+                    setPosition(LEVEL.LATCH);
+                    break;
+                }
                 break;
             case TOP:
-                if(pos == lvl || power == Math.abs(power)){break;}
-                move(power, motor);
-                pos = LEVEL.TOP;
+                if(!pos.equals(lvl)) move(power, motor);
+
+                if (pos.equals(lvl)) {
+                    motor.setPower(0);
+                    setPosition(LEVEL.TOP);
+                    break;
+                }
                 break;
         }
-        stop();
     }
 
     //Moves our lift/ratchet up or down depending on the given power.

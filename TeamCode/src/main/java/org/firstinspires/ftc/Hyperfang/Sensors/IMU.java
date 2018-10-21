@@ -36,23 +36,15 @@ public class IMU {
         imu.initialize(parameters);
     }
 
-    //Initializes our IMU through just the gyroscope.
-    public IMU(String deviceName, OpMode opMode) {
+    //Initializes our IMU through with the accelerometer.
+    public IMU(OpMode opMode, int msPollInt) {
         parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        initAccel(1000);
-        imu = opMode.hardwareMap.get(BNO055IMU.class, deviceName);
-        imu.initialize(parameters);
-    }
-
-    //Initializing the IMU with acceleration.
-    private void initAccel(int msPollInt) {
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled = true;
-        parameters.loggingTag = "IMU";
+        parameters.loggingEnabled = false;
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        // Start the logging of measured acceleration
+        imu = opMode.hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
         imu.startAccelerationIntegration(new Position(), new Velocity(), msPollInt);
     }
 

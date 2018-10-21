@@ -27,18 +27,16 @@ public class Color {
         float red = com.qualcomm.robotcore.util.Range.clip((int)(color.red   * scale), min, max);
         float green = com.qualcomm.robotcore.util.Range.clip((int)(color.green * scale), min, max);
         float blue = com.qualcomm.robotcore.util.Range.clip((int)(color.blue  * scale), min, max);
-        float[] rgb = {red, green, blue};
-        return rgb;
+        rgbValues = new float[]{red, green, blue};
+        return rgbValues;
     }
 
     public float getR() {
         return rgbValues[0];
     }
-
     public float getG() {
         return rgbValues[1];
     }
-
     public float getB() {
         return rgbValues[2];
     }
