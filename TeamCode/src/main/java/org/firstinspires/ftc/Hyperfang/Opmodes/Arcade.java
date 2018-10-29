@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Controls;
+import org.firstinspires.ftc.Hyperfang.Robot.Lift;
 
 import java.util.Arrays;
 
@@ -37,7 +38,6 @@ public class Arcade extends OpMode {
         controls.moveArcade();
         controls.setDirectionButton(gamepad1.y, revDelay);
         controls.setSpeedButtons(gamepad1.a, gamepad1.b, slowDelay);
-
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Power: ", Arrays.toString(controls.getDriveValue()));

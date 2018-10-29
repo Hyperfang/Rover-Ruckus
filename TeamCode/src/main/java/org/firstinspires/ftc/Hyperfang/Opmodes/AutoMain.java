@@ -98,7 +98,7 @@ public class AutoMain extends OpMode {
 
             case LAND:
                 if (mLift.getPosition().equals("LATCH")) {
-                    mLift.moveTo(Lift.LEVEL.GROUND, .5, mLift.ratchetMotor());
+                    mLift.moveTo(Lift.LEVEL.GROUND, .5, mLift.ratchetMotor);
                     mLift.unhook();
                     setState(State.FINDMIN);
                 } else {

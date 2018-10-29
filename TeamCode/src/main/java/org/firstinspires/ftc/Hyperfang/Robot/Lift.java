@@ -2,11 +2,15 @@ package org.firstinspires.ftc.Hyperfang.Robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
 
 public class Lift {
+    //Lift variables which need to have accessibility.
+    public static DcMotor liftMotor;
+    public static DcMotor ratchetMotor;
     public MGL mgl;
 
     public enum LEVEL {
@@ -15,13 +19,10 @@ public class Lift {
         TOP,
     }
 
-    private DcMotor liftMotor;
-    private DcMotor ratchetMotor;
+    private LEVEL pos;
+
     private Servo ratchetServo;
     private Servo hook; //Possibly change to continuous to ease Tele-Op.
-
-
-    private LEVEL pos;
 
     private OpMode mOpMode;
 
@@ -30,10 +31,8 @@ public class Lift {
         mOpMode = opMode;
         liftMotor = mOpMode.hardwareMap.get(DcMotor.class, "vLift");
         ratchetMotor = mOpMode.hardwareMap.get(DcMotor.class, "ratchet");
-        ratchetMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hook = mOpMode.hardwareMap.get(Servo.class, "hook");
         ratchetServo = mOpMode.hardwareMap.get(Servo.class, "rServo");
+        hook = mOpMode.hardwareMap.get(Servo.class, "hook");
 
         mgl = new MGL(opMode);
         pos = LEVEL.GROUND;
@@ -74,14 +73,21 @@ public class Lift {
 
     //Moves our lift/ratchet up or down depending on the given power.
     public void move(double power, DcMotor motor) {
+        mOpMode.telemetry.addData("Motor: ", motor.getDeviceName());
         switch (pos) {
-            case GROUND:
+            default:
+                motor.setPower(power);
+                break;
 
+            case GROUND:
+                mOpMode.telemetry.addData("Moving ", power); //For testing
                 //Don't move down if we are at the lowest level.
                 if (power > 0) {
                     motor.setPower(power);
                     if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
                 }
+
+                if (power == 0) motor.setPower(0);
 
                 //If we wish to move down from mid-level, make sure we aren't at the base.
                 if (power < 0 && !mgl.isTouched()) {
@@ -90,6 +96,7 @@ public class Lift {
                 break;
 
             case LATCH:
+                mOpMode.telemetry.addData("Moving ", power); //For testing
                 if (power < 0 || 0 < power) {
                     motor.setPower(power);
                     if (mgl.isStateChange()) {
@@ -97,14 +104,20 @@ public class Lift {
                         if (power > 0) { pos = LEVEL.TOP; }
                     }
                 }
+
+                if (power == 0) motor.setPower(0);
+
                 break;
 
             case TOP:
+                mOpMode.telemetry.addData("Moving ", power); //For testing
                 //Don't move up if we are at the highest level.
                 if (power < 0) {
                     motor.setPower(power);
                     if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
                 }
+
+                if (power == 0) motor.setPower(0);
 
                 //If we wish to move up from mid-level, make sure we aren't at the base.
                 if (power > 0 && !mgl.isTouched()) {
@@ -118,13 +131,17 @@ public class Lift {
     public void stop() {
         liftMotor.setPower(0);
         ratchetMotor.setPower(0);
+        lockRatchet();
     }
 
-    //Sets the position of the ratchet based on whether we want it move-able or stopped.
-    //"move" sets it in a state that is ready to be moved. "stop" disallows movement.
-    public void setRatchet(String pos) {
-        if (pos.equals("move")) ratchetServo.setPosition(.5);
-        if (pos.equals("stop")) ratchetServo.setPosition(0);
+    //Unlocks the ratchet sets it in a state that is ready to be moved. "stop" disallows movement.
+    public void unlockRatchet() {
+        ratchetServo.setPosition(.7);
+    }
+
+    //Locks the ratchet to prevent ratchet movement.
+    public void lockRatchet() {
+        ratchetServo.setPosition(1);
     }
 
     //Sets the position of our lift.
@@ -138,15 +155,12 @@ public class Lift {
     }
 
     //Moves the hook to a position which we can hook.
-    public void hook() { hook.setPosition(1); } //need to test position.
+    public void hook() { hook.setPosition(.45); }
 
     //Moves the hook to a position which we can unhook.
-    public void unhook() { hook.setPosition(0); } //need to test position.
+    public void unhook() { hook.setPosition(0.05); }
 
-    //Returns the lift motor for specification outside the class.
-    public DcMotor liftMotor() { return liftMotor; }
-
-    //Returns the ratchet motor for specification outside the class.
-    public DcMotor ratchetMotor() { return ratchetMotor; }
-
+    public void setLift(double power) {
+        mOpMode.telemetry.addData("work ", liftMotor.getPower());
+        liftMotor.setPower(power);}
 }

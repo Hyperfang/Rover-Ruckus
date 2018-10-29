@@ -46,6 +46,7 @@ public class Base {
         imu = new IMU(opMode);
         rSensor = new Range("range", opMode);
 
+        setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
         initPos();
     }
 

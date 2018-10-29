@@ -30,14 +30,14 @@ public class Manipulator {
     public Manipulator(OpMode opMode) {
         mOpMode = opMode;
         liftMotor = mOpMode.hardwareMap.get(DcMotor.class, "hLift");
-        intakeMotor = mOpMode.hardwareMap.get(DcMotor.class, "intake");
+        //intakeMotor = mOpMode.hardwareMap.get(DcMotor.class, "intake");
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //May need to add reverse.
 
-        leftIntake = mOpMode.hardwareMap.get(Servo.class, "leftServo");
-        rightIntake = mOpMode.hardwareMap.get(Servo.class, "rightServo");
+        //leftIntake = mOpMode.hardwareMap.get(Servo.class, "leftServo");
+        //rightIntake = mOpMode.hardwareMap.get(Servo.class, "rightServo");
     }
 
     //Moves the horizontal lift using a given power.

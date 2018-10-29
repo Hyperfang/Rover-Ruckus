@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Controls {
 
     private Base base;
+    private Lift lift;
+    private Manipulator intake;
 
     private double linear;
     private double turn;
@@ -18,12 +20,18 @@ public class Controls {
     private boolean slowButton;
     private boolean resetButton;
 
+    private boolean isRatchetLocked;
+    private boolean isHook;
+
     private OpMode mOpMode;
+    private double pos = 0;
 
     //Initializes the controls object.
     public Controls(OpMode opMode) {
         mOpMode = opMode;
         base = new Base(opMode);
+        lift = new Lift(opMode);
+        intake = new Manipulator(opMode);
 
         mOpMode.gamepad1.setJoystickDeadzone(.075f);
         mOpMode.gamepad2.setJoystickDeadzone(.075f);
@@ -36,6 +44,13 @@ public class Controls {
         revDelay = new ElapsedTime();
         revMode = false;
         revButton = false;
+
+        isRatchetLocked = true;
+        isHook = false;
+    }
+
+    public void initRobot() {
+        lift.setPosition(Lift.LEVEL.GROUND);
     }
 
     //Drive Method
@@ -62,6 +77,7 @@ public class Controls {
     //Drive Method
     //Gyro-Assisted TeleOp Mode uses left stick to go forward, and right stick to absolute turn.
     //This drive method can be explained as using the robot from a top-down view.
+    //This drive method is unavailable until plane-configuration occurs.
     public void moveGAT() {
         linear = -mOpMode.gamepad1.left_stick_y;
 
@@ -156,6 +172,50 @@ public class Controls {
         revDelay = delay;
     }
 
+    //Moves the Vertical lift.
+    public void moveLift(double gamepad) {
+        lift.move(gamepad, Lift.liftMotor);
+    }
+
+    //Moves the ratchet.
+    public void moveRatchet(double gamepad) {
+        lift.move(gamepad, Lift.ratchetMotor);    }
+
+    //Moves the Horizontal lift.
+    public void moveHLift(double gamepad) {
+        intake.moveLift(gamepad);
+    }
+
+    //Locks or Unlocks the ratchet based on the state it is in.
+    public void ratchetLock(boolean toggle, ElapsedTime delay) {
+        if (delay.milliseconds() > 500) {  //Allows time for button release.
+            if (toggle && isRatchetLocked) { //Toggle is the ratchet toggle button.
+                isRatchetLocked = false;
+                lift.unlockRatchet();
+                delay.reset();
+            } else if (toggle) { //Setting to locked mode.
+                isRatchetLocked = true;
+                lift.lockRatchet();
+                delay.reset();
+            }
+        }
+    }
+
+    //Locks or Unlocks the ratchet based on the state it is in.
+    public void hook(boolean toggle, ElapsedTime delay) {
+        if (delay.milliseconds() > 500) {  //Allows time for button release.
+            if (toggle && isHook) { //Toggle is the ratchet toggle button.
+                isHook = false;
+                lift.hook();
+                delay.reset();
+            } else if (toggle) { //Setting to locked mode.
+                isHook = true;
+                lift.unhook();
+                delay.reset();
+            }
+        }
+    }
+
     //Returns our drive variables.
     public boolean getSpeedToggle() { return slowMode; }
 
@@ -165,5 +225,25 @@ public class Controls {
     //Returns our drive variables.
     public double[] getDriveValue() {
         return new double[]{linear, turn};
+    }
+
+    //Provides a method of easily testing servos.
+    //Where x and y can be substituted for gamepad inputs.
+    public double testServo(boolean x, boolean y, ElapsedTime delay) {
+        if (delay.milliseconds() > 100) {
+            if (x) {
+                pos += .05;
+                delay.reset();
+            } if  (y) {
+                pos -= .05;
+                delay.reset();
+            }
+        }
+        return pos;
+    }
+
+    //Returns the current position of the phone.
+    public String getLevel() {
+        return lift.getPosition();
     }
 }
