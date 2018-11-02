@@ -18,14 +18,6 @@ public class Manipulator {
     private Servo leftIntake;
     private Servo rightIntake;
 
-    private static final double COUNTS_PER_MOTOR_REV = 1440 ; // Rev Orbital 40:1
-    private static final double DIAMETER_INCHES   = 1.025; // Spool
-    private static final double COUNTS_PER_INCH   = (COUNTS_PER_MOTOR_REV) / (DIAMETER_INCHES * 3.1415);
-
-    private double curEnc;
-    private static final double encTolerance = 100;
-
-
     //Initializes the manipulator objects.
     public Manipulator(OpMode opMode) {
         mOpMode = opMode;
@@ -46,35 +38,28 @@ public class Manipulator {
     }
 
     //Moves the horizontal lift to a certain position using encoders.
+    //Encoders have a built-in PID: applicable here due to the use of one motor.
     //resetEncoders() before running this in a loop.
-    public double moveLift(int pos) {
-        double p = 90; //Change
-
+    public void moveLift(double power, int counts) {
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        liftMotor.setTargetPosition((int)(pos * COUNTS_PER_INCH));
+        liftMotor.setTargetPosition(counts);
 
-        curEnc = liftMotor.getCurrentPosition();
+        liftMotor.setPower(power);
 
-        if (setEnc(pos)) {
-            curEnc = liftMotor.getCurrentPosition();
-
-            //Insert PID HERE
-            double power = curEnc/p;
-
-            if (curEnc < pos) return power;
-            if (curEnc > pos) return -power;
+        while (liftMotor.isBusy()) {
+            mOpMode.telemetry.addData("Current Encoder: ", getEncoders());
         }
-        return 0;
+        liftMotor.setPower(0);
+    }
+
+    //Returns the current encoder value of the horizontal lift.
+    public int getEncoders() {
+         return liftMotor.getCurrentPosition();
     }
 
     //Resets the encoder count.
     public void resetEncoders() {
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
-
-    //Returns whether our encoder is not in the desired position. Useful for loops.
-    private boolean setEnc(int pos) {
-        return Math.abs(curEnc - pos) > encTolerance;
     }
 
     //Sets the the intake motor allowing us to run.

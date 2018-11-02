@@ -43,11 +43,14 @@ public class Base {
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        imu = new IMU(opMode);
         rSensor = new Range("range", opMode);
 
         setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
         initPos();
+    }
+
+    public void initIMU(OpMode opMode){
+        imu = new IMU(opMode);
     }
 
     //Initializes position so that we can initially run our turn methods.
@@ -242,9 +245,9 @@ public class Base {
     //Uses a P to control precision.
     public double rangeMove(double inAway) { //Moving forward/backwards using a Range Sensor.
         curDis = rSensor.getDistanceIN();
-        mOpMode.telemetry.addData("curdis, initial,", curDis);
         double pow;
         double localRange;
+        double error;
 
         if (curDis != 0) {
             //If sensor isn't in the desired position, run.
@@ -257,9 +260,11 @@ public class Base {
                 }
 
                 curDis = localRange; //Sets all working and usable values into a variable we can utilize.
+                error = inAway - curDis;
                 mOpMode.telemetry.addData("Range: ", curDis);
                 //Input P I D here
-                pow = .2;
+                pow = (Math.abs(error)/90);
+                if (pow < .075) pow = .075;
 
                 if (curDis > inAway) { //If the sensor value is greater than the target, move backwards.
                     return -pow;
@@ -281,11 +286,19 @@ public class Base {
         return rSensor.isTimeout();
     }
 
+    public double getHeading() {
+        return imu.getHeading();
+    }
+
+    public double getRange() {
+        return rSensor.getDistanceIN();
+    }
+
+/*
     //Vuforia Turn.
     private double curVF;
     private static final double vfTolerance = 0.0;
 
-    private Vuforia vf;
     //Possible additions to move methods.
     public void vfMove() {}
     public void vfTurn() {}
@@ -293,6 +306,7 @@ public class Base {
     public boolean setVF(double value) {
         return Math.abs(curVF - value) < vfTolerance;
     }
+*/
 }
 
 

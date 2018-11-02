@@ -8,9 +8,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
 
 public class Lift {
-    //Lift variables which need to have accessibility.
-    public static DcMotor liftMotor;
-    public static DcMotor ratchetMotor;
     public MGL mgl;
 
     public enum LEVEL {
@@ -21,6 +18,8 @@ public class Lift {
 
     private LEVEL pos;
 
+    private static DcMotor liftMotor;
+    private static DcMotor ratchetMotor;
     private Servo ratchetServo;
     private Servo hook; //Possibly change to continuous to ease Tele-Op.
 
@@ -33,6 +32,8 @@ public class Lift {
         ratchetMotor = mOpMode.hardwareMap.get(DcMotor.class, "ratchet");
         ratchetServo = mOpMode.hardwareMap.get(Servo.class, "rServo");
         hook = mOpMode.hardwareMap.get(Servo.class, "hook");
+
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         mgl = new MGL(opMode);
         pos = LEVEL.GROUND;
@@ -73,14 +74,12 @@ public class Lift {
 
     //Moves our lift/ratchet up or down depending on the given power.
     public void move(double power, DcMotor motor) {
-        mOpMode.telemetry.addData("Motor: ", motor.getDeviceName());
         switch (pos) {
             default:
                 motor.setPower(power);
                 break;
 
             case GROUND:
-                mOpMode.telemetry.addData("Moving ", power); //For testing
                 //Don't move down if we are at the lowest level.
                 if (power > 0) {
                     motor.setPower(power);
@@ -96,7 +95,6 @@ public class Lift {
                 break;
 
             case LATCH:
-                mOpMode.telemetry.addData("Moving ", power); //For testing
                 if (power < 0 || 0 < power) {
                     motor.setPower(power);
                     if (mgl.isStateChange()) {
@@ -110,7 +108,6 @@ public class Lift {
                 break;
 
             case TOP:
-                mOpMode.telemetry.addData("Moving ", power); //For testing
                 //Don't move up if we are at the highest level.
                 if (power < 0) {
                     motor.setPower(power);
@@ -160,7 +157,12 @@ public class Lift {
     //Moves the hook to a position which we can unhook.
     public void unhook() { hook.setPosition(0.05); }
 
-    public void setLift(double power) {
-        mOpMode.telemetry.addData("work ", liftMotor.getPower());
-        liftMotor.setPower(power);}
+    //Test whether passing this way will work.
+    public DcMotor LiftMotor() {
+        return liftMotor;
+    }
+
+    public DcMotor RatchetMotor() {
+        return ratchetMotor;
+    }
 }

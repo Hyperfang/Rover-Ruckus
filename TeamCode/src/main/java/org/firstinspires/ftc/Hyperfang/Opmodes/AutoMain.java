@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.Hyperfang.Opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Robot.Lift;
+import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
 import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
@@ -18,21 +20,32 @@ public class AutoMain extends OpMode {
         LAND,
         FINDMIN,
         SAMPLE,
-        FINDNAV,
+        RESET,
         LOGNAV,
-        DEPOT_MARKER,
+        NAVDEPOT,
+        DEPOTMARKER,
         DEPOSITMIN,
         PICKUPMIN,
         PARK,
     }
 
+    //Robot objects which we use in the class.
     private Lift mLift;
     private Vuforia mVF;
     private OpenCV mCV;
     private Base mBase;
 
-    private State mState; //Current state of the state machine.
-    private ElapsedTime StateTime;
+    //Runtime Variables
+    public ElapsedTime mRunTime = new ElapsedTime();
+    private ElapsedTime mInitTime = new ElapsedTime();
+
+    //Variables which log information about the current state of the state machine.
+    private State mState;
+    private ElapsedTime StateTime = new ElapsedTime();
+
+    //Logging Variables.
+    private String vuMark;
+    private int manipEnc;
 
     //Reset our state run timer and set a new state.
     private void setState(State nS) {
@@ -40,13 +53,8 @@ public class AutoMain extends OpMode {
         mState = nS;
     }
 
-    // Time Variables
-    public ElapsedTime mRunTime = new ElapsedTime(); //Time of running.
-    private ElapsedTime mInitTime = new ElapsedTime(); //Time it takes to initialize.
-
-    //--------------------------------------------------------------------------------------------------
-    public AutoMain() {
-    } //Default Constructor
+//--------------------------------------------------------------------------------------------------
+    public AutoMain() {} //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
     //Initialization: Runs once  driver presses init.
@@ -59,6 +67,8 @@ public class AutoMain extends OpMode {
         mLift = new Lift(this);
         mVF = new Vuforia();
         mCV = new OpenCV(this);
+
+        vuMark = "";
 
         //Indicates that initialization is complete.
         telemetry.addData("Initialized", "in " + mInitTime.milliseconds() + "ms");
@@ -73,11 +83,18 @@ public class AutoMain extends OpMode {
     //Start: Runs once driver hits play.
     @Override
     public void start() {
-        mLift.setPosition(Lift.LEVEL.LATCH);
+        //Must change once we add Latching.
+        mLift.setPosition(Lift.LEVEL.GROUND);
         mVF.activate();
+        mCV.activate(mVF.getBitmap());
 
-        telemetry.clear(); //Clearing our telemetry dashboard.
+        //Clearing our telemetry dashboard.
+        telemetry.clear();
         mRunTime.reset();
+
+        //Change to when we hit ground in future.
+        mBase.initIMU(this);
+        setState(State.FINDMIN);
     }
 
     //Loop: Loops once driver hits play after start() runs.
@@ -88,7 +105,8 @@ public class AutoMain extends OpMode {
         telemetry.addData(mState.toString(), StateTime.seconds());
 
         switch (mState) {
-            case INITIAL: //Stay until our magnetic limit switch is set.
+            //Stay until our magnetic limit switch is set.
+            /* case INITIAL:
                 if (mLift.mgl.isTouched()) {
                     setState(State.LAND);
                 } else {
@@ -96,63 +114,103 @@ public class AutoMain extends OpMode {
                 }
                 break;
 
+            //Lower until we touch the ground
             case LAND:
                 if (mLift.getPosition().equals("LATCH")) {
-                    mLift.moveTo(Lift.LEVEL.GROUND, .5, mLift.ratchetMotor);
+                    mLift.moveTo(Lift.LEVEL.GROUND, .5,  mLift.RatchetMotor());
                     mLift.unhook();
                     setState(State.FINDMIN);
                 } else {
                     telemetry.addData("", "stuff");
                 }
                 break;
-
+*/
             case FINDMIN:
+                //Lower our lift to the ground level.
                 if (mLift.getPosition().equals("GROUND")) {
-                    while (!mCV.isGoldFound()) { //Unnecessary loop?
-                        mCV.findGold(mCV.getVuforia(mVF.getBitmap())); //EDIT: May need to add loop.
-                        mBase.turnRelative(.5,15);
+                    mLift.stop();
+
+                    //Locate the gold.
+                    while (!mCV.isGoldFound()) {
+                        mCV.findGold(mCV.getVuforia(mVF.getBitmap()));
+                        //TODO: Move removed once a camera which can see all 3 minerals is added.
+                        mBase.move(0, .1);
                     }
                     setState(State.SAMPLE);
-                } else {
-                }
+                } else { telemetry.addData("Debug: ", mLift.getPosition()); }
                 break;
 
             case SAMPLE:
-                OpenCV.Position pos = mCV.sample(mCV.getVuforia(mVF.getBitmap()));
+                //Sample (reposition) the Cube.
                 if (mCV.isGoldFound()) {
-                    mBase.turnRelative(.5, mCV.getGoldAngle());
-                    //base.move(); move.forward(range.of.cube - manip.size)
-                    //extend/deploy manip
-                    //intake gold             manip.intake.on
-                    //retract/undeplpoy manip.intake.off
-                    setState(State.LOGNAV);
-                } else {
-                }
+                    mBase.stop();
+                    //Lining up with the cube based on its position to our camera in relation to the robot.
+                    //mBase.move(0, mBase.turnRelative(.5, mCV.getGoldAngle()));
+
+                    //Intake the gold while tracking how far our manipulator moves.
+                    //Manipulator.resetEncoders();
+                    //manipEnc = Manipulator.getEncoders();
+
+                    //While (A. we see the gold or B. Range sensor is within X value) {
+                        //Manipulator.moveLift();
+                        //Manipulator.setIntake();
+                    // }
+                    //manipEnc -= Manipulator.getEncoders();
+
+                    //Start to retract the manipulator.
+                    //Manipulator.setIntake(0);
+                    //Manipulator.moveLift(.25, manipEnc);
+                    setState(State.RESET);
+                } else { telemetry.addData("Debug: ", mBase.getRange()); }
                 break;
 
-            case FINDNAV:
-                if (!mVF.isVisible()) {
-                    mBase.move(0, .25);
-                    mVF.getVuMark();
-                } else {
+            case RESET:
+                //Reset to the starting position.
+                if (mBase.setTurn(0)) {
+                    mBase.move(0, mBase.turnAbsolute(.5, 0));
+                }
+                //Begin to log the navigation target.
+                else {
+                    while (mBase.setTurn(45)) {
+                        mBase.move(0, mBase.turnAbsolute(.5, 45));
+                    }
+                    mBase.move(.1, 0);
                     setState(State.LOGNAV);
                 }
                 break;
 
             case LOGNAV:
-                if (mVF.isVisible()) {
-                    //Move based on logged visible vurmark - 4 ifs for 4 navigations
-                    //Move.To.Pic       turn.left.till.center.of.bot.is.aligned.with.pic
+                if (!mVF.isVisible()) {
+                    mBase.move(.1, 0);
+                    mVF.getVuMark();
                 } else {
+                    telemetry.addData("Navigation Target: ", mVF.getVuMarkName());
+                    mBase.stop();
+                    setState(State.NAVDEPOT);
                 }
                 break;
 
-            case DEPOT_MARKER:
-                // if () {} else {}
-                //put.one.in          OUTTAKE CODE THAT WE HAVE NOT DECIDED  ON
-                setState(State.DEPOSITMIN);
+            case NAVDEPOT:
+                //Finding the target associated with the - Red and - Left Side.
+                if (mVF.getVuMarkName().equals("1 and 2") && mVF.getVuMarkName().equals("1 and 2")) {
+                    //Add target specifics
+                    while (mBase.setTurn(45)) { mBase.move(.2, mBase.turnAbsolute(.5, 90)); }
+                } else {
+                    while (mBase.setTurn(45)) { mBase.move(.2, mBase.turnAbsolute(.5, -90)); }
+                }
+                setState(State.PARK);
                 break;
-
+/*
+            case DEPOTMARKER:
+                //Depositing the cube and manipulator using the intake.
+                if (mBase.setTurn(10)) {
+                    mBase.stop();
+                    //Manipulator.setIntake for x seconds. - while jump
+                    //Manipulator.stop
+                    setState(State.PARK);
+                } else { }
+                break;
+//
             case DEPOSITMIN:
                 // if () {} else {}
                 //put.one.in          OUTTAKE CODE THAT WE HAVE NOT DECIDED  ON
@@ -167,13 +225,16 @@ public class AutoMain extends OpMode {
                 manip.intake.on
                 wait(5)
                 bring.back.manip
-                separate.minerals */
+                separate.minerals
                 if (mRunTime.seconds() < 7.5) {
                     setState(State.PARK);
                 }
                 break;
-
+*/
             case PARK:
+                telemetry.addData("Debug: ", mBase.getRange());
+                mBase.stop();
+                break;
                 //Locate current position
                 //Move to crater
         }

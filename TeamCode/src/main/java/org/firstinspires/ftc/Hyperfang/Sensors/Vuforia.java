@@ -186,7 +186,7 @@ public class Vuforia {
             telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
                     trans.get(0) / mmPerInch, trans.get(1) / mmPerInch, trans.get(2) / mmPerInch);
             telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rot.firstAngle, rot.secondAngle, rot.thirdAngle);
-        }
+        } else { telemetry.addLine("VuMark is not visible."); }
     }
 
     // Extract the X, Y, and Z components of the target robot relative to the target.

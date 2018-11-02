@@ -252,7 +252,7 @@ public class OpenCV {
                 //Distance from the middle of the object to the camera.
                 double xDiff = cameraMidpoint.x - goldMidpoint.x;
                 double yDiff = cameraMidpoint.y - goldMidpoint.y;
-                double distance = Math.sqrt(Math.pow(xDiff,2) + Math.pow(yDiff, 2));
+                double distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
 
                 //Calculating our angle using our angle to pixel representation value and distance.
                 double angle = pixelRep * distance;

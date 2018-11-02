@@ -174,12 +174,13 @@ public class Controls {
 
     //Moves the Vertical lift.
     public void moveLift(double gamepad) {
-        lift.move(gamepad, Lift.liftMotor);
+        lift.move(gamepad, lift.LiftMotor());
     }
 
     //Moves the ratchet.
     public void moveRatchet(double gamepad) {
-        lift.move(gamepad, Lift.ratchetMotor);    }
+        lift.move(gamepad, lift.RatchetMotor());
+    }
 
     //Moves the Horizontal lift.
     public void moveHLift(double gamepad) {
