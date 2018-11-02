@@ -94,7 +94,7 @@ public class Vuforia {
         initTrack();
     }
 
-    //Initializes our vuforia object with a camera montitor.
+    //Initializes our vuforia object with a camera monitor.
     public Vuforia(OpMode opMode) {
         int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
@@ -133,6 +133,11 @@ public class Vuforia {
     //Start tracking the data sets we care about.
     public void activate() {
         targetsRoverRuckus.activate();
+    }
+
+    //Returns the Localizer which we can use to initialize Tensorflow.
+    public VuforiaLocalizer getLocalizer() {
+        return vuforia;
     }
 
     //Finding our vuMark and all its information.

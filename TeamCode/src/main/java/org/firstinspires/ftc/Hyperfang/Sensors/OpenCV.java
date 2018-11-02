@@ -26,9 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class OpenCV {
-    //List of positions for gold minerals used in the relative sampling method.
-    public enum Position { LEFT, CENTER, RIGHT, UNKNOWN }
-
     private Mat resizeOutput;
     private Mat blurOutput;
     private Mat hsvOutput;
@@ -130,21 +127,6 @@ public class OpenCV {
         //Locate the position of the gold from the image.
         findGold(input);
         return new double[]{getGoldDistance(), getGoldAngle()};
-    }
-
-    //Locates all 3 of the mineral positions and returns the relative position of the mineral.
-    public Position sample(Mat input) {
-        Position pos = Position.UNKNOWN;
-
-        //Locate the position of the gold from the image.
-        findGold(input);
-
-        //Locate the position of the silver(s) from the image.
-        findSilver(input);
-
-        //Compare each object in order to determine the position.
-
-        return pos;
     }
 
     //Returns the angle amount to turn based on midpoint distance from object.

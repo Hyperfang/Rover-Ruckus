@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
+import org.firstinspires.ftc.Hyperfang.Sensors.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
 @Autonomous(name="Test", group="Iterative Opmode")
@@ -17,9 +18,8 @@ public class IterativeTest extends OpMode {
 //--------------------------------------------------------------------------------------------------
 
     private ElapsedTime runtime;
-    private OpenCV cv;
+    private Tensorflow tf;
     private Vuforia vuforia;
-    private Base base;
 
     //Initialization: Runs once  driver presses init.
     @Override
@@ -27,9 +27,8 @@ public class IterativeTest extends OpMode {
         runtime = new ElapsedTime();
 
         //Instantiating our robot objects.
-        base = new Base(this);
         vuforia = new Vuforia(this);
-        cv = new OpenCV(this);
+        tf = new Tensorflow(this, vuforia.getLocalizer());
 
         //Indicates that initialization is complete.
         telemetry.addLine("Initialized in " + runtime.milliseconds() + "ms");
@@ -44,19 +43,19 @@ public class IterativeTest extends OpMode {
     //Start: Runs once driver hits play.
     @Override
     public void start() {
-        vuforia.activate();
-        cv.activate(vuforia.getBitmap());
+        tf.activate();
     }
 
     private double relAng2 = 0;
     //Loop: Loops once driver hits play after start() runs.
     @Override
     public void loop() {
+        while(!tf.isPosFound()) {
+            tf.sample();
+        }
 
-        telemetry.addLine("Running");
-        vuforia.getInfo(telemetry);
-        vuforia.getVuMarkName();
-        vuforia.getVuMark();
+        telemetry.addData("Position of gold cube is ", tf.getPos().name());
+        telemetry.addData("Position of gold cube is ", tf.isPosFound());
         }
 
 
