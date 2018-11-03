@@ -194,7 +194,7 @@ public class Vuforia {
         } else { telemetry.addLine("VuMark is not visible."); }
     }
 
-    // Extract the X, Y, and Z components of the target robot relative to the target.
+    //Extract the X, Y, and Z components of the target robot relative to the target.
     //Returning the x (forwards) value of the robot relative to the target.
     public float getDistanceX() {
         if (targetVisible)

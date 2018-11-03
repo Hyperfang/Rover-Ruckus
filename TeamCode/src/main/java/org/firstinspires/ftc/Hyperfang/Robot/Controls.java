@@ -7,7 +7,7 @@ public class Controls {
 
     private Base base;
     private Lift lift;
-    private Manipulator intake;
+    private Manipulator manip;
 
     private double linear;
     private double turn;
@@ -21,7 +21,9 @@ public class Controls {
     private boolean resetButton;
 
     private boolean isRatchetLocked;
+    private boolean isIntakePosition;
     private boolean isHook;
+    private boolean isTrap;
 
     private OpMode mOpMode;
     private double pos = 0;
@@ -31,7 +33,7 @@ public class Controls {
         mOpMode = opMode;
         base = new Base(opMode);
         lift = new Lift(opMode);
-        intake = new Manipulator(opMode);
+        manip = new Manipulator(opMode);
 
         mOpMode.gamepad1.setJoystickDeadzone(.075f);
         mOpMode.gamepad2.setJoystickDeadzone(.075f);
@@ -45,11 +47,15 @@ public class Controls {
         revMode = false;
         revButton = false;
 
+        isTrap = true;
+        isIntakePosition = false;
         isRatchetLocked = true;
         isHook = false;
     }
 
     public void initRobot() {
+        lift.lockRatchet();
+        manip.depositPosition();
         lift.setPosition(Lift.LEVEL.GROUND);
     }
 
@@ -173,18 +179,56 @@ public class Controls {
     }
 
     //Moves the Vertical lift.
-    public void moveLift(double gamepad) {
+    public void moveVLift(double gamepad) {
         lift.move(gamepad, lift.LiftMotor());
     }
 
+    //Moves the Horizontal lift.
+    public void moveHLift(double gamepad) {
+        manip.moveLift(gamepad);
+    }
     //Moves the ratchet.
     public void moveRatchet(double gamepad) {
         lift.move(gamepad, lift.RatchetMotor());
     }
 
-    //Moves the Horizontal lift.
-    public void moveHLift(double gamepad) {
-        intake.moveLift(gamepad);
+    //Runs the intake to collect minerals.
+    public void intake(double gamepad) {
+        manip.setIntake(gamepad);
+    }
+
+    public void intakePosition(boolean toggle, ElapsedTime delay) {
+        if (manip.incIntakePosition) {
+            manip.intakePosition();
+            mOpMode.telemetry.addLine("INTAKING");
+        }
+        else if (delay.milliseconds() > 300 && !manip.incIntakePosition) {  //Allows time for button release.
+            if (toggle && isIntakePosition) { //Toggle is the toggle button.
+                isIntakePosition = false;
+                manip.depositPosition();
+                delay.reset();
+            } else if (toggle) { //Setting to intake mode.
+                isIntakePosition = true;
+                mOpMode.telemetry.addLine("INCREMENT");
+                manip.incIntakePosition = true;
+                delay.reset();
+            }
+        }
+    }
+
+    //Sets the position of the trapdoor.
+    public void trapdoor(boolean toggle, ElapsedTime delay) {
+        if (delay.milliseconds() > 250) {  //Allows time for button release.
+            if (toggle && isTrap) { //Toggle is the gamepad toggle button.
+                isTrap = false;
+                manip.holdMinerals();
+                delay.reset();
+            } else if (toggle) { //Setting to locked mode.
+                isTrap = true;
+                manip.releaseMinerals();
+                delay.reset();
+            }
+        }
     }
 
     //Locks or Unlocks the ratchet based on the state it is in.
@@ -218,10 +262,14 @@ public class Controls {
     }
 
     //Returns our drive variables.
-    public boolean getSpeedToggle() { return slowMode; }
+    public boolean getSpeedToggle() {
+        return slowMode;
+    }
 
     //Returns our drive variables.
-    public boolean getDirectionToggle() { return revMode; }
+    public boolean getDirectionToggle() {
+        return revMode;
+    }
 
     //Returns our drive variables.
     public double[] getDriveValue() {
@@ -231,16 +279,22 @@ public class Controls {
     //Provides a method of easily testing servos.
     //Where x and y can be substituted for gamepad inputs.
     public double testServo(boolean x, boolean y, ElapsedTime delay) {
+        mOpMode.telemetry.addData("POS: ", pos);
         if (delay.milliseconds() > 100) {
             if (x) {
                 pos += .05;
                 delay.reset();
-            } if  (y) {
+            }
+            if (y) {
                 pos -= .05;
                 delay.reset();
             }
         }
         return pos;
+    }
+
+    public void test(double pos) {
+        manip.unlockDeposit(pos);
     }
 
     //Returns the current position of the phone.

@@ -34,6 +34,7 @@ public class AutoMain extends OpMode {
     private Vuforia mVF;
     private OpenCV mCV;
     private Base mBase;
+    private Manipulator mManip;
 
     //Runtime Variables
     public ElapsedTime mRunTime = new ElapsedTime();
@@ -67,6 +68,7 @@ public class AutoMain extends OpMode {
         mLift = new Lift(this);
         mVF = new Vuforia();
         mCV = new OpenCV(this);
+        mManip = new Manipulator(this);
 
         vuMark = "";
 
@@ -84,6 +86,8 @@ public class AutoMain extends OpMode {
     @Override
     public void start() {
         //Must change once we add Latching.
+        mLift.lockRatchet();
+        mManip.depositPosition();
         mLift.setPosition(Lift.LEVEL.GROUND);
         mVF.activate();
         mCV.activate(mVF.getBitmap());
@@ -103,6 +107,8 @@ public class AutoMain extends OpMode {
 
         //Sending our current state and state run time to our driver station.
         telemetry.addData(mState.toString(), StateTime.seconds());
+        telemetry.addData("IMU", mBase.getHeading());
+        telemetry.addData("Range", mBase.getRange());
 
         switch (mState) {
             //Stay until our magnetic limit switch is set.
@@ -116,15 +122,21 @@ public class AutoMain extends OpMode {
 
             //Lower until we touch the ground
             case LAND:
-                if (mLift.getPosition().equals("LATCH")) {
+                mLift.unlockRatchet();
+                while (mLift.getPosition().equals("LATCH")) {
                     mLift.moveTo(Lift.LEVEL.GROUND, .5,  mLift.RatchetMotor());
-                    mLift.unhook();
+                    }
+                    mLift.stop;
+                    mLift.move(mLift.LiftMotor());
+                    mLift.unhook;
+                    mLift.stop;
                     setState(State.FINDMIN);
                 } else {
                     telemetry.addData("", "stuff");
                 }
                 break;
 */
+            //TODO: Add web-cam and implement the working TensorFlow Sample Method.
             case FINDMIN:
                 //Lower our lift to the ground level.
                 if (mLift.getPosition().equals("GROUND")) {
@@ -190,15 +202,37 @@ public class AutoMain extends OpMode {
                 }
                 break;
 
-            case NAVDEPOT:
-                //Finding the target associated with the - Red and - Left Side.
-                if (mVF.getVuMarkName().equals("1 and 2") && mVF.getVuMarkName().equals("1 and 2")) {
+                //TODO Before Adding: figure out which navigation targets respond to which side.
+           case NAVDEPOT:
+                //Finding the target associated with the Crater Red and Crater Blue.
+                //Run until we can no longer see a target, then start using the range sensor.
+
+                if (mVF.getVuMarkName().equals("Blue-Rover") && mVF.getVuMarkName().equals("Red-Footprint")) {
                     //Add target specifics
-                    while (mBase.setTurn(45)) { mBase.move(.2, mBase.turnAbsolute(.5, 90)); }
-                } else {
-                    while (mBase.setTurn(45)) { mBase.move(.2, mBase.turnAbsolute(.5, -90)); }
+                    while (mBase.setTurn(-135) && mVF.isVisible()) {
+                        telemetry.addData("Range", mBase.getRange());
+                        telemetry.addData("IMU", mBase.getHeading());
+                        mVF.getVuMark();
+                        mBase.move(.2, mBase.turnAbsolute(.4, -135));
+                    }
+                    while (mBase.setRange(10) && !mVF.isVisible()) {
+                        telemetry.addData("Range", mBase.getRange());
+                        telemetry.addData("IMU", mBase.getHeading());
+                        mVF.getVuMark();
+                        mBase.move(mBase.rangeMove(10) , mBase.turnAbsolute(.4, -135));
+                    }
                 }
-                setState(State.PARK);
+                else {
+                    while (mBase.setTurn(135) && mVF.isVisible()) {
+                        mVF.getVuMark();
+                        mBase.move(.2, mBase.turnAbsolute(.5, 135));
+                    }
+                    while (mBase.setRange(10) && !mVF.isVisible()) {
+                        mVF.getVuMark();
+                        mBase.move(mBase.rangeMove(10) , mBase.turnAbsolute(.5, 135));
+                    }
+                }
+               setState(State.PARK);
                 break;
 /*
             case DEPOTMARKER:
@@ -210,7 +244,7 @@ public class AutoMain extends OpMode {
                     setState(State.PARK);
                 } else { }
                 break;
-//
+/*
             case DEPOSITMIN:
                 // if () {} else {}
                 //put.one.in          OUTTAKE CODE THAT WE HAVE NOT DECIDED  ON

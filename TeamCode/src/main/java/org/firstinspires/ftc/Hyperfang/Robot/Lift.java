@@ -74,6 +74,9 @@ public class Lift {
 
     //Moves our lift/ratchet up or down depending on the given power.
     public void move(double power, DcMotor motor) {
+        mOpMode.telemetry.addData("MGL: ", mgl.isTouched());
+        mOpMode.telemetry.addData("MGL State Change: ", mgl.isStateChange());
+        mOpMode.telemetry.addData("MGL HAS STATE: ", mgl.hasStateChanged);
         switch (pos) {
             default:
                 motor.setPower(power);

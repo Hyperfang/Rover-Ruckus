@@ -259,18 +259,24 @@ public class Base {
                     localRange = rSensor.getDistanceIN();
                 }
 
-                curDis = localRange; //Sets all working and usable values into a variable we can utilize.
+                //Sets all working and usable values into a variable we can utilize.
+                curDis = localRange;
+
                 error = inAway - curDis;
                 mOpMode.telemetry.addData("Range: ", curDis);
-                //Input P I D here
+
+                //Input I D here
                 pow = (Math.abs(error)/90);
                 if (pow < .075) pow = .075;
 
-                if (curDis > inAway) { //If the sensor value is greater than the target, move backwards.
-                    return -pow;
-                }
-                if (curDis < inAway) { //If the sensor value is lower than than the target, move forwards.
+                //If the sensor value is greater than the target, move backwards.
+                if (curDis > inAway) {
                     return pow;
+                }
+
+                //If the sensor value is lower than than the target, move forwards.
+                if (curDis < inAway) {
+                    return -pow;
                 }
             }
         }

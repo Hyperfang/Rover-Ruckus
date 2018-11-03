@@ -26,8 +26,22 @@ public class Tensorflow {
 
     private OpMode mOpMode;
 
-    //Initializes our Tensorflow object with? a camera monitor.
+    //Initializes our Tensorflow object without a camera monitor.
     public Tensorflow(OpMode opmode, VuforiaLocalizer vuforia) {
+        mOpMode = opmode;
+        pos = Position.UNKNOWN;
+
+        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
+            TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters();
+            tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+            tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
+        } else {
+            mOpMode.telemetry.addData("Sorry!", "This device is not compatible with TFOD");
+        }
+    }
+
+    //Initializes our Tensorflow object with a camera monitor.
+    public Tensorflow(OpMode opmode, VuforiaLocalizer vuforia, String id) {
         mOpMode = opmode;
         pos = Position.UNKNOWN;
 
@@ -46,46 +60,48 @@ public class Tensorflow {
     //Must initialize Vuforia beforehand.
     public void activate() { if (tfod != null) tfod.activate(); }
 
+    //Deactivates Tensorflow object detection.
+    public void deactivate() { if (tfod != null) tfod.shutdown(); }
+
     //Locates the position of the gold cube and logs the position.
     public void sample() {
-        if (tfod != null) {
-            // getUpdatedRecognitions() will return null if no new information is available since
-            // the last time that call was made.
-            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-            if (updatedRecognitions != null) {
-                mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
-                if (updatedRecognitions.size() == 3) {
-                    int goldMineralX = -1;
-                    int silverMineral1X = -1;
-                    int silverMineral2X = -1;
-                    for (Recognition recognition : updatedRecognitions) {
-                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                            goldMineralX = (int) recognition.getLeft();
-                        } else if (silverMineral1X == -1) {
-                            silverMineral1X = (int) recognition.getLeft();
-                        } else {
-                            silverMineral2X = (int) recognition.getLeft();
+            if (tfod != null) {
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                if (updatedRecognitions != null) {
+                    mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
+                    if (updatedRecognitions.size() == 3) {
+                        int goldMineralX = -1;
+                        int silverMineral1X = -1;
+                        int silverMineral2X = -1;
+                        for (Recognition recognition : updatedRecognitions) {
+                            if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                goldMineralX = (int) recognition.getLeft();
+                            } else if (silverMineral1X == -1) {
+                                silverMineral1X = (int) recognition.getLeft();
+                            } else {
+                                silverMineral2X = (int) recognition.getLeft();
+                            }
                         }
-                    }
-                    if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                        if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                            posFound = true;
-                            pos = Position.LEFT;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Left");
-                        } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                            posFound = true;
-                            pos = Position.RIGHT;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Right");
-                        } else {
-                            pos = Position.CENTER;
-                            posFound = true;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Center");
+                        if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
+                            if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
+                                pos = Position.LEFT;
+                                posFound = true;
+                                mOpMode.telemetry.addData("Gold Mineral Position", "Left");
+                            } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
+                                pos = Position.RIGHT;
+                                posFound = true;
+                                mOpMode.telemetry.addData("Gold Mineral Position", "Right");
+                            } else {
+                                pos = Position.CENTER;
+                                posFound = true;
+                                mOpMode.telemetry.addData("Gold Mineral Position", "Center");
+                            }
                         }
                     }
                 }
             }
-        }
-        if (tfod != null) tfod.shutdown();
     }
 
     //Returns the position of the cube.
@@ -97,6 +113,4 @@ public class Tensorflow {
     public boolean isPosFound() {
         return posFound;
     }
-
-
 }
