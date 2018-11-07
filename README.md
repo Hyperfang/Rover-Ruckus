@@ -12,7 +12,7 @@ For more information about the *FIRST* organization, visit the [FIRST website](h
 
 * **Object Oriented Programming** - The main part of our project is programmed using a programming paradigm known as Object Oriented Programming. This allows us to represent the modularity of our robot through code.
 
-* **State Machine** - Our autonomous uses a Finite-state machine to run the robot. A state machine allows us to react to the game based on states for a consistent autonomous.
+* **State Machine** - Our autonomous uses a Finite-state machine to run the robot. A state machine allows us to react to the game based on states for a consistent, one-class autonomous.
 
 * **PID Controller** - Precise control of our robot movement is important, so we achieve this by adding a Proportional-Integral-Derivative controller to our movement methods.
 

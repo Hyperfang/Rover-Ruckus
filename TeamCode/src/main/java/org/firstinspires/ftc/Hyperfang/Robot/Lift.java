@@ -2,7 +2,6 @@ package org.firstinspires.ftc.Hyperfang.Robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
@@ -73,10 +72,8 @@ public class Lift {
     }
 
     //Moves our lift/ratchet up or down depending on the given power.
+    //TODO: Tracking needs testing.
     public void move(double power, DcMotor motor) {
-        mOpMode.telemetry.addData("MGL: ", mgl.isTouched());
-        mOpMode.telemetry.addData("MGL State Change: ", mgl.isStateChange());
-        mOpMode.telemetry.addData("MGL HAS STATE: ", mgl.hasStateChanged);
         switch (pos) {
             default:
                 motor.setPower(power);

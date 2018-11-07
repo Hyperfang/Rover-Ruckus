@@ -47,6 +47,13 @@ public class AutoMain extends OpMode {
     //Logging Variables.
     private String vuMark;
     private int manipEnc;
+    private double craterDir;
+
+    //TODO: Remove, Clean Up States, and replace while's with if's.
+    //Variable which allows us to circumvent the watchdog timers for a bit.
+    private boolean bypassWDT;
+    //TODO: Wait variable for League Meet 1 to park.
+    private ElapsedTime wait = new ElapsedTime();
 
     //Reset our state run timer and set a new state.
     private void setState(State nS) {
@@ -71,6 +78,7 @@ public class AutoMain extends OpMode {
         mManip = new Manipulator(this);
 
         vuMark = "";
+        bypassWDT = true;
 
         //Indicates that initialization is complete.
         telemetry.addData("Initialized", "in " + mInitTime.milliseconds() + "ms");
@@ -80,7 +88,6 @@ public class AutoMain extends OpMode {
     @Override
     public void init_loop() {
     }
-
 
     //Start: Runs once driver hits play.
     @Override
@@ -104,7 +111,6 @@ public class AutoMain extends OpMode {
     //Loop: Loops once driver hits play after start() runs.
     @Override
     public void loop() {
-
         //Sending our current state and state run time to our driver station.
         telemetry.addData(mState.toString(), StateTime.seconds());
         telemetry.addData("IMU", mBase.getHeading());
@@ -143,12 +149,11 @@ public class AutoMain extends OpMode {
                     mLift.stop();
 
                     //Locate the gold.
-                    while (!mCV.isGoldFound()) {
+                    if (!mCV.isGoldFound()) {
                         mCV.findGold(mCV.getVuforia(mVF.getBitmap()));
-                        //TODO: Move removed once a camera which can see all 3 minerals is added.
+                         //TODO: Move removed once a camera which can see all 3 minerals is added.
                         mBase.move(0, .1);
-                    }
-                    setState(State.SAMPLE);
+                    } else { setState(State.SAMPLE); }
                 } else { telemetry.addData("Debug: ", mLift.getPosition()); }
                 break;
 
@@ -173,9 +178,9 @@ public class AutoMain extends OpMode {
                     //Manipulator.setIntake(0);
                     //Manipulator.moveLift(.25, manipEnc);
                     setState(State.RESET);
-                } else { telemetry.addData("Debug: ", mBase.getRange()); }
+                } else { }
                 break;
-
+            //TODO: Good example of state where we enter doing something, and exit.
             case RESET:
                 //Reset to the starting position.
                 if (mBase.setTurn(0)) {
@@ -186,65 +191,77 @@ public class AutoMain extends OpMode {
                     while (mBase.setTurn(45)) {
                         mBase.move(0, mBase.turnAbsolute(.5, 45));
                     }
-                    mBase.move(.1, 0);
+                    mBase.move(.15, 0);
                     setState(State.LOGNAV);
                 }
                 break;
 
             case LOGNAV:
                 if (!mVF.isVisible()) {
-                    mBase.move(.1, 0);
+                    mBase.move(.15, 0);
                     mVF.getVuMark();
                 } else {
-                    telemetry.addData("Navigation Target: ", mVF.getVuMarkName());
+                    vuMark = mVF.getVuMarkName();
+                    //TODO: Remove after consistent.
                     mBase.stop();
                     setState(State.NAVDEPOT);
                 }
                 break;
 
-                //TODO Before Adding: figure out which navigation targets respond to which side.
            case NAVDEPOT:
                 //Finding the target associated with the Crater Red and Crater Blue.
                 //Run until we can no longer see a target, then start using the range sensor.
-
-                if (mVF.getVuMarkName().equals("Blue-Rover") && mVF.getVuMarkName().equals("Red-Footprint")) {
-                    //Add target specifics
-                    while (mBase.setTurn(-135) && mVF.isVisible()) {
-                        telemetry.addData("Range", mBase.getRange());
-                        telemetry.addData("IMU", mBase.getHeading());
-                        mVF.getVuMark();
-                        mBase.move(.2, mBase.turnAbsolute(.4, -135));
+                if (vuMark.equals("Blue-Rover") || vuMark.equals("Red-Footprint")) {
+                     craterDir = -45;
+                    //TODO: Clean up the range method to become more efficient.
+                    //Move close to the wall.
+                    while (mBase.setRange(12.5) && bypassWDT) {
+                        mBase.move(mBase.rangeMove(12.5) , 0);
                     }
-                    while (mBase.setRange(10) && !mVF.isVisible()) {
-                        telemetry.addData("Range", mBase.getRange());
-                        telemetry.addData("IMU", mBase.getHeading());
-                        mVF.getVuMark();
-                        mBase.move(mBase.rangeMove(10) , mBase.turnAbsolute(.4, -135));
+                    //Turn parallel to the wall facing the depot.
+                    while (mBase.setTurn(127) && bypassWDT) {
+                        mBase.move(.25, mBase.turnAbsolute(.5, 127));
                     }
+                    //Move to the depot.
+                    bypassWDT = false;
+                    if (mBase.setRange(25) && !bypassWDT) {
+                        mBase.move(mBase.rangeMove(25), 0);
+                    } else { setState(State.DEPOTMARKER); }
                 }
                 else {
-                    while (mBase.setTurn(135) && mVF.isVisible()) {
-                        mVF.getVuMark();
-                        mBase.move(.2, mBase.turnAbsolute(.5, 135));
+                     craterDir = 85;
+                    //Move close to the wall.
+                    while (mBase.setRange(12.5) && bypassWDT) {
+                        mBase.move(mBase.rangeMove(12.5) , 0);
                     }
-                    while (mBase.setRange(10) && !mVF.isVisible()) {
-                        mVF.getVuMark();
-                        mBase.move(mBase.rangeMove(10) , mBase.turnAbsolute(.5, 135));
+                    //Turn parallel to the wall facing the depot.
+                    while (mBase.setTurn(-40) && bypassWDT) {
+                        mBase.move(.25, mBase.turnAbsolute(.5, -40));
                     }
+                    //Move to the depot.
+                    bypassWDT = false;
+                    if (mBase.setRange(25) && !bypassWDT) {
+                        mBase.move(mBase.rangeMove(25), 0);
+                    } else { setState(State.DEPOTMARKER); }
                 }
-               setState(State.PARK);
-                break;
-/*
+               break;
+
             case DEPOTMARKER:
+                mBase.stop();
                 //Depositing the cube and manipulator using the intake.
-                if (mBase.setTurn(10)) {
-                    mBase.stop();
-                    //Manipulator.setIntake for x seconds. - while jump
-                    //Manipulator.stop
+                //if (mBase.setRange()) {
+                    mManip.unlockDeposit();
+
+                    //Turn to deposit position, which is also the direction facing the crater.
+                    while (mBase.setTurn(craterDir)) {
+                        mBase.move(0, mBase.turnAbsolute(.5, craterDir));
+                    }
+                    wait.reset();
                     setState(State.PARK);
-                } else { }
+                //} //else { }
                 break;
-/*
+
+/*          //TODO: Add for LM2.
             case DEPOSITMIN:
                 // if () {} else {}
                 //put.one.in          OUTTAKE CODE THAT WE HAVE NOT DECIDED  ON
@@ -266,8 +283,12 @@ public class AutoMain extends OpMode {
                 break;
 */
             case PARK:
-                telemetry.addData("Debug: ", mBase.getRange());
-                mBase.stop();
+                if (wait.milliseconds() < 4000) {
+                    mBase.move(.25, 0);
+                } else {
+                    mBase.stop();
+                    mManip.intakePosition();
+                }
                 break;
                 //Locate current position
                 //Move to crater
@@ -278,5 +299,4 @@ public class AutoMain extends OpMode {
     @Override
     public void stop() {
     }
-
 }

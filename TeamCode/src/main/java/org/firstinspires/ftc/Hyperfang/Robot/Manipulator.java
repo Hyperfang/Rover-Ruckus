@@ -40,12 +40,14 @@ public class Manipulator {
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
         leftIntake = mOpMode.hardwareMap.get(Servo.class, "leftServo");
         rightIntake = mOpMode.hardwareMap.get(Servo.class, "rightServo");
         trapDoor = mOpMode.hardwareMap.get(Servo.class, "trapDoor");
 
-        //depositA = mOpMode.hardwareMap.get(Servo.class, "depA");
-        //depositB = mOpMode.hardwareMap.get(Servo.class, "depB");
+        depositA = mOpMode.hardwareMap.get(Servo.class, "depA");
+        depositB = mOpMode.hardwareMap.get(Servo.class, "depB");
     }
 
     //Moves the horizontal lift using a given power.
@@ -86,16 +88,17 @@ public class Manipulator {
 
     //Set the position manipulator to the intake position.
     public void intakePosition() {
-        if (intakeDelay.milliseconds() > 100) {  //Allows time for slower release.
-            intakeLeftPow = leftIntake.getPosition() + .1;
-            intakeRightPow = rightIntake.getPosition() - .1;
+        //Allows time for slower release.
+        if (intakeDelay.milliseconds() > 60) {
+            intakeLeftPow = leftIntake.getPosition() + .5;
+            intakeRightPow = rightIntake.getPosition() - .5;
 
             leftIntake.setPosition(intakeLeftPow);
             rightIntake.setPosition(intakeRightPow);
 
-            if (leftIntake.getPosition() == 1 && rightIntake.getPosition() == 0) {
-                leftIntake.setPosition(1);
-                rightIntake.setPosition(0);
+            if (intakeLeftPow >= .3 && intakeRightPow <= .7) {
+                leftIntake.setPosition(.3);
+                rightIntake.setPosition(.7);
                 incIntakePosition = false;
             }
         }
@@ -119,14 +122,14 @@ public class Manipulator {
 
     /** Below represents method regarding the deposit section of our Manipulator.*/
     //Unlocks the deposit disallowing transfer of minerals to the deposit.
-    public void unlockDeposit(double pos) {
-        depositA.setPosition(pos);
-        depositB.setPosition(pos);
+    public void unlockDeposit() {
+        depositA.setPosition(.6);
+        depositB.setPosition(.6);
     }
 
     //Locks the deposit disallowing transfer of minerals to the deposit.
     public void lockDeposit() {
-        depositA.setPosition(0);
-        depositB.setPosition(0);
+        depositA.setPosition(.125);
+        depositB.setPosition(.125);
     }
 }

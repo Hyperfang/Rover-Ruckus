@@ -24,6 +24,7 @@ public class Controls {
     private boolean isIntakePosition;
     private boolean isHook;
     private boolean isTrap;
+    private boolean isDeposit;
 
     private OpMode mOpMode;
     private double pos = 0;
@@ -47,15 +48,17 @@ public class Controls {
         revMode = false;
         revButton = false;
 
-        isTrap = true;
-        isIntakePosition = false;
         isRatchetLocked = true;
+        isTrap = true;
+        isDeposit = false;
+        isIntakePosition = false;
         isHook = false;
     }
 
     public void initRobot() {
         lift.lockRatchet();
         manip.depositPosition();
+        manip.lockDeposit();
         lift.setPosition(Lift.LEVEL.GROUND);
     }
 
@@ -148,11 +151,14 @@ public class Controls {
     }
 
     private void toggleDirection(boolean toggle, ElapsedTime delay) {
-        if (delay.milliseconds() > 500) {  //Allows time for button release.
-            if (toggle && !revMode) { //Toggle is the reverse mode button.
+        //Allows time for button release.
+        if (delay.milliseconds() > 500) {
+            //Toggle is the reverse mode button.
+            if (toggle && !revMode) {
                 revMode = true;
                 delay.reset();
-            } else if (toggle) { //Setting to normal mode.
+            } //Setting to normal mode.
+            else if (toggle) {
                 revMode = false;
                 delay.reset();
             }
@@ -187,29 +193,41 @@ public class Controls {
     public void moveHLift(double gamepad) {
         manip.moveLift(gamepad);
     }
+
     //Moves the ratchet.
     public void moveRatchet(double gamepad) {
         lift.move(gamepad, lift.RatchetMotor());
     }
 
-    //Runs the intake to collect minerals.
-    public void intake(double gamepad) {
-        manip.setIntake(gamepad);
+    //Moves the ratchet.
+    public void moveRatchet(boolean gamepad) {
+        if (gamepad) { lift.move(1, lift.RatchetMotor()); }
+        else { lift.move(0, lift.RatchetMotor()); }
+    }
+
+    //Runs the intake to collect or release minerals.
+    public void intake(double gamepad, double gamepad2) {
+        if (0 < Math.abs(gamepad))  { manip.setIntake(1); }
+        else if (0 < Math.abs(gamepad2)) { manip.setIntake(-1); }
+        else { manip.setIntake(0); }
+
     }
 
     public void intakePosition(boolean toggle, ElapsedTime delay) {
         if (manip.incIntakePosition) {
             manip.intakePosition();
-            mOpMode.telemetry.addLine("INTAKING");
+            mOpMode.telemetry.addLine("HELP");
         }
-        else if (delay.milliseconds() > 300 && !manip.incIntakePosition) {  //Allows time for button release.
-            if (toggle && isIntakePosition) { //Toggle is the toggle button.
+        //Allows time for button release.
+        else if (delay.milliseconds() > 300 && !manip.incIntakePosition) {
+            //Toggle is the toggle button.
+            if (toggle && isIntakePosition) {
                 isIntakePosition = false;
                 manip.depositPosition();
                 delay.reset();
-            } else if (toggle) { //Setting to intake mode.
+            } //Setting to intake mode.
+            else if (toggle) {
                 isIntakePosition = true;
-                mOpMode.telemetry.addLine("INCREMENT");
                 manip.incIntakePosition = true;
                 delay.reset();
             }
@@ -218,12 +236,15 @@ public class Controls {
 
     //Sets the position of the trapdoor.
     public void trapdoor(boolean toggle, ElapsedTime delay) {
-        if (delay.milliseconds() > 250) {  //Allows time for button release.
-            if (toggle && isTrap) { //Toggle is the gamepad toggle button.
+        //Allows time for button release.
+        if (delay.milliseconds() > 250) {
+            //Toggle is the trapdoor toggle button.
+            if (toggle && isTrap) {
                 isTrap = false;
                 manip.holdMinerals();
                 delay.reset();
-            } else if (toggle) { //Setting to locked mode.
+            } //Setting to locked mode.
+            else if (toggle) {
                 isTrap = true;
                 manip.releaseMinerals();
                 delay.reset();
@@ -231,14 +252,35 @@ public class Controls {
         }
     }
 
+    //Sets the position of the trapdoor.
+    public void deposit(boolean toggle, ElapsedTime delay) {
+        //Allows time for button release.
+        if (delay.milliseconds() > 250) {
+            //Toggle is the deposit toggle button.
+            if (toggle && !isDeposit) {
+                isDeposit = true;
+                manip.unlockDeposit();
+                delay.reset();
+            } //Setting to locked mode.
+            else if (toggle) {
+                isDeposit = false;
+                manip.lockDeposit();
+                delay.reset();
+            }
+        }
+    }
+
     //Locks or Unlocks the ratchet based on the state it is in.
     public void ratchetLock(boolean toggle, ElapsedTime delay) {
-        if (delay.milliseconds() > 500) {  //Allows time for button release.
-            if (toggle && isRatchetLocked) { //Toggle is the ratchet toggle button.
+        //Allows time for button release.
+        if (delay.milliseconds() > 500) {
+            //Toggle is the ratchet toggle button.
+            if (toggle && isRatchetLocked) {
                 isRatchetLocked = false;
                 lift.unlockRatchet();
                 delay.reset();
-            } else if (toggle) { //Setting to locked mode.
+            } //Setting to locked mode.
+            else if (toggle) {
                 isRatchetLocked = true;
                 lift.lockRatchet();
                 delay.reset();
@@ -248,12 +290,15 @@ public class Controls {
 
     //Locks or Unlocks the ratchet based on the state it is in.
     public void hook(boolean toggle, ElapsedTime delay) {
-        if (delay.milliseconds() > 500) {  //Allows time for button release.
-            if (toggle && isHook) { //Toggle is the ratchet toggle button.
+        //Allows time for button release.
+        if (delay.milliseconds() > 500) {
+            //Toggle is the hook toggle button.
+            if (toggle && isHook) {
                 isHook = false;
                 lift.hook();
                 delay.reset();
-            } else if (toggle) { //Setting to locked mode.
+            } //Setting to locked mode.
+            else if (toggle) {
                 isHook = true;
                 lift.unhook();
                 delay.reset();
@@ -291,10 +336,6 @@ public class Controls {
             }
         }
         return pos;
-    }
-
-    public void test(double pos) {
-        manip.unlockDeposit(pos);
     }
 
     //Returns the current position of the phone.

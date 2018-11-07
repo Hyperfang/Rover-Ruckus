@@ -6,9 +6,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
 import org.firstinspires.ftc.Hyperfang.Sensors.Range;
-import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
 public class Base {
+    private static final double COUNTS_PER_MOTOR_REV    = 1440 ;    // Rev Orbital 40:1
+    private static final double DRIVE_GEAR_REDUCTION    = 20 / 15.0;// Drive-Train Gear Ratio.
+    private static final double WHEEL_DIAMETER_INCHES   = 4.0 ;     // Andymark Stealth/Omni Wheels
+    private static final double COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
 
     private DcMotor backLeft;
     private DcMotor frontRight;
@@ -18,17 +21,12 @@ public class Base {
     private IMU imu;
     private Range rSensor;
 
-    private static final double COUNTS_PER_MOTOR_REV    = 1440 ;    // Rev Orbital 40:1
-    private static final double DRIVE_GEAR_REDUCTION    = 20 / 15.0;// Drive-Train Gear Ratio.
-    private static final double WHEEL_DIAMETER_INCHES   = 4.0 ;     // Andymark Stealth/Omni Wheels
-    private static final double COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
-
     private double curEnc;
     private double curAng;
     private double curDis;
     private static final double encTolerance = 100;
-    private static final double turnTolerance = 6;
-    private static final double rangeTolerance = 1;
+    private static final double turnTolerance = 5;
+    private static final double rangeTolerance = 1.5;
 
     private OpMode mOpMode;
 
@@ -255,7 +253,7 @@ public class Base {
                 localRange = rSensor.getDistanceIN();
 
                 //If a faulty value is detected, don't update our used variable till a good one is found.
-                while ((Double.isNaN(localRange) || (localRange > 80))) {
+                while ((Double.isNaN(localRange) || (localRange > 320))) {
                     localRange = rSensor.getDistanceIN();
                 }
 
@@ -263,7 +261,6 @@ public class Base {
                 curDis = localRange;
 
                 error = inAway - curDis;
-                mOpMode.telemetry.addData("Range: ", curDis);
 
                 //Input I D here
                 pow = (Math.abs(error)/90);
@@ -283,36 +280,25 @@ public class Base {
         return 0;
     }
 
-    //Returns whether our distance is not in the desired position. Useful for loops.
+    //Returns whether the distance is not in the desired position. Useful for loops.
     public boolean setRange(double inAway) {
         return Math.abs(curDis - inAway) > rangeTolerance;
     }
 
+    //Returns whether the range sensor is timed out.
     public boolean isRangeTimeout() {
         return rSensor.isTimeout();
     }
 
+    //Returns the current heading value of the range sensor.
     public double getHeading() {
         return imu.getHeading();
     }
 
+    //Returns the current distance value of the range sensor.
     public double getRange() {
         return rSensor.getDistanceIN();
     }
-
-/*
-    //Vuforia Turn.
-    private double curVF;
-    private static final double vfTolerance = 0.0;
-
-    //Possible additions to move methods.
-    public void vfMove() {}
-    public void vfTurn() {}
-
-    public boolean setVF(double value) {
-        return Math.abs(curVF - value) < vfTolerance;
-    }
-*/
 }
 
 
