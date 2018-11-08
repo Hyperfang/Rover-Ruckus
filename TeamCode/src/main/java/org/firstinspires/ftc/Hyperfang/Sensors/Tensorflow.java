@@ -23,6 +23,7 @@ public class Tensorflow {
     public enum Position { LEFT, CENTER, RIGHT, UNKNOWN }
     private Position pos;
     private boolean posFound = false;
+    private int[] order = new int[3];
 
     private OpMode mOpMode;
 
@@ -103,6 +104,91 @@ public class Tensorflow {
                 }
             }
     }
+
+    //Locates the position of the gold cube and logs the position.
+    public void sample2() {
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
+                if (updatedRecognitions.size() == 2) {
+                    int goldMinCheck = -1;
+                    int silverMinCheck = -1;
+
+                    for (Recognition recognition : updatedRecognitions) {
+                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                            goldMinCheck = (int) recognition.getLeft();
+                        }
+                        else if (silverMinCheck == -1) {
+                            silverMinCheck = (int) recognition.getLeft();
+                        }
+                    }
+
+                    if (silverMinCheck != -1) { //Needs work
+                        if (goldMinCheck < silverMinCheck) {
+                            pos = Position.LEFT;
+                            posFound = true;
+                            mOpMode.telemetry.addData("Gold Mineral Position", "Left");
+                        } else if (goldMinCheck == -1) {
+                            pos = Position.RIGHT;
+                            posFound = true;
+                            mOpMode.telemetry.addData("Gold Mineral Position", "Right");
+                        } else {
+                            pos = Position.CENTER;
+                            posFound = true;
+                            mOpMode.telemetry.addData("Gold Mineral Position", "Center");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //Locates the position of the gold cube and logs the position.
+    public void sample3() {
+        if (tfod != null) {
+            // getUpdatedRecognitions() will return null if no new information is available since
+            // the last time that call was made.
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
+                if (updatedRecognitions.size() == 2) {
+                    int goldMinCheck = -1;
+                    int silverMinCheck = -1;
+
+                    for (Recognition recognition : updatedRecognitions) {
+                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                            goldMinCheck = (int) recognition.getLeft();
+                        }
+                        else if (silverMinCheck == -1) {
+                            silverMinCheck = (int) recognition.getLeft();
+                            mOpMode.telemetry.addData("Silver: ", silverMinCheck);
+                        }
+                    }
+
+                    if (silverMinCheck != -1) { //Needs work
+                        if (goldMinCheck < silverMinCheck) {
+                            pos = Position.LEFT;
+                            posFound = true;
+                            mOpMode.telemetry.addData("Gold Mineral Position", "Left");
+                        } else if (goldMinCheck == -1) {
+                            pos = Position.RIGHT;
+                            posFound = true;
+                            mOpMode.telemetry.addData("Gold Mineral Position", "Right");
+                        } else {
+                            pos = Position.CENTER;
+                            posFound = true;
+                            mOpMode.telemetry.addData("Gold Mineral Position", "Center");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 
     //Returns the position of the cube.
     public Position getPos() {

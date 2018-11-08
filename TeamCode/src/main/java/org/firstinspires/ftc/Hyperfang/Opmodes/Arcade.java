@@ -43,10 +43,10 @@ public class Arcade extends OpMode {
      * being used on the Gamepads.
      *
      * Gamepad 1: Left Stick, Right Stick, Left Trigger, Right Trigger,
-     *            Left Bumper, Right Bumper, A, Y
+     *            Left Bumper, Right Bumper, B, Y
      *
      * Gamepad 2: Left Stick, Right Stick, Left Trigger, Right Trigger,
-     *            Left Bumper, Right Bumper, A, B, Y
+     *            Left Bumper, Right Bumper, A, X B, Y
      */
 
     @Override
@@ -54,7 +54,7 @@ public class Arcade extends OpMode {
         //For now, Driver 2 controls the Intake, and Hook.
         //controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
         controls.intake(gamepad2.right_trigger, gamepad2.left_trigger);
-        //controls.hook(gamepad1.a, hookDelay);
+        controls.hook(gamepad1.b, hookDelay);
         controls.hook(gamepad2.y, hookDelay);
 
         //Driver 1 controls Driving: Base, Movement Modifiers
@@ -72,7 +72,7 @@ public class Arcade extends OpMode {
         controls.intakePosition(gamepad2.left_bumper, intakePosDelay);
         controls.trapdoor(gamepad2.dpad_down, trapDelay);
 
-        //Deposit
+        //        //Deposit
         controls.deposit(gamepad2.b, depDelay);
 
         //Driver 2 controls Hanging: Ratchet, Ratchet Lock.

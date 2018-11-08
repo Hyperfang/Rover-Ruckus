@@ -26,7 +26,7 @@ public class Base {
     private double curDis;
     private static final double encTolerance = 100;
     private static final double turnTolerance = 5;
-    private static final double rangeTolerance = 1.5;
+    private static final double rangeTolerance = 1;
 
     private OpMode mOpMode;
 
