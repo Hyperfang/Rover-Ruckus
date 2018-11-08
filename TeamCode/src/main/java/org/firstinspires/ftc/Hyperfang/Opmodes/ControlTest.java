@@ -56,8 +56,8 @@ public class ControlTest extends OpMode {
     @Override
     public void loop() {
         //Both drivers control the Intake, and Hook.
-        controls.release(gamepad1.left_trigger);
-        controls.release(gamepad2.left_trigger);
+        controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
+        controls.intake(gamepad2.right_trigger, gamepad2.left_trigger);
         controls.hook(gamepad1.a, hookDelay);
         controls.hook(gamepad2.y, hookDelay);
 

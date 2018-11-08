@@ -9,7 +9,6 @@ import org.firstinspires.ftc.Hyperfang.Robot.Controls;
 
 
 @TeleOp(name="Tank", group="Iterative Opmode")
-@Disabled
 public class Tank extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -53,17 +52,17 @@ public class Tank extends OpMode {
 
     @Override
     public void loop() {
-        //Both drivers control the Intake, and Hook.
-        controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
+        //For now, Driver 2 controls the Intake, and Hook.
+        //controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
         controls.intake(gamepad2.right_trigger, gamepad2.right_trigger);
-        controls.hook(gamepad1.a, hookDelay);
+        //controls.hook(gamepad1.a, hookDelay);
         controls.hook(gamepad2.y, hookDelay);
 
         //Driver 1 controls Driving: Base, Movement Modifiers
         controls.moveTank();
 
-        //Reverse Mode, Half-Speed, Reset (Half-Speed)
-        controls.setDirectionButton(gamepad1.left_bumper, revDelay);
+        //!Reverse Mode, Half-Speed, Reset (Half-Speed)
+        //controls.setDirectionButton(gamepad1.left_bumper, revDelay);
         controls.setSpeedButtons(gamepad1.right_bumper, gamepad1.y, slowDelay);
 
         //Driver 2 controls Manipulation: Vertical Lift, Horizontal Lift,

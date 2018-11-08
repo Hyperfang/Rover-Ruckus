@@ -263,7 +263,7 @@ public class Base {
                 error = inAway - curDis;
 
                 //Input I D here
-                pow = (Math.abs(error)/90);
+                pow = (Math.abs(error)/80);
                 if (pow < .075) pow = .075;
 
                 //If the sensor value is greater than the target, move backwards.

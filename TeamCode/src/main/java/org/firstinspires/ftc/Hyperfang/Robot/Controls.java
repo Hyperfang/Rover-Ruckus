@@ -48,7 +48,7 @@ public class Controls {
         revMode = false;
         revButton = false;
 
-        isRatchetLocked = true;
+        isRatchetLocked = false;
         isTrap = true;
         isDeposit = false;
         isIntakePosition = false;
@@ -56,7 +56,7 @@ public class Controls {
     }
 
     public void initRobot() {
-        lift.lockRatchet();
+        lift.unlockRatchet();
         manip.depositPosition();
         manip.lockDeposit();
         lift.setPosition(Lift.LEVEL.GROUND);

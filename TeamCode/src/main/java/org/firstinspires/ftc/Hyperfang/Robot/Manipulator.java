@@ -89,16 +89,16 @@ public class Manipulator {
     //Set the position manipulator to the intake position.
     public void intakePosition() {
         //Allows time for slower release.
-        if (intakeDelay.milliseconds() > 60) {
+        if (intakeDelay.milliseconds() > 500) {
             intakeLeftPow = leftIntake.getPosition() + .5;
             intakeRightPow = rightIntake.getPosition() - .5;
 
             leftIntake.setPosition(intakeLeftPow);
             rightIntake.setPosition(intakeRightPow);
 
-            if (intakeLeftPow >= .3 && intakeRightPow <= .7) {
-                leftIntake.setPosition(.3);
-                rightIntake.setPosition(.7);
+            if (intakeLeftPow >= .25 && intakeRightPow <= .75) {
+                leftIntake.setPosition(.25);
+                rightIntake.setPosition(.75);
                 incIntakePosition = false;
             }
         }

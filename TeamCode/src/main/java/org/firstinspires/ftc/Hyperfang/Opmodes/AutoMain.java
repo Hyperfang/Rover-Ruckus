@@ -94,6 +94,7 @@ public class AutoMain extends OpMode {
     public void start() {
         //Must change once we add Latching.
         mLift.lockRatchet();
+        mManip.lockDeposit();
         mManip.depositPosition();
         mLift.setPosition(Lift.LEVEL.GROUND);
         mVF.activate();
@@ -160,6 +161,7 @@ public class AutoMain extends OpMode {
             case SAMPLE:
                 //Sample (reposition) the Cube.
                 if (mCV.isGoldFound()) {
+                    telemetry.addData("GOLD Position: ", mCV.getGoldAngle());
                     mBase.stop();
                     //Lining up with the cube based on its position to our camera in relation to the robot.
                     //mBase.move(0, mBase.turnRelative(.5, mCV.getGoldAngle()));
@@ -192,15 +194,20 @@ public class AutoMain extends OpMode {
                         mBase.move(0, mBase.turnAbsolute(.5, 45));
                     }
                     mBase.move(.15, 0);
+                    wait.reset();
                     setState(State.LOGNAV);
                 }
                 break;
 
             case LOGNAV:
-                if (!mVF.isVisible()) {
+                if (!mVF.isVisible() && wait.milliseconds() < 4000) {
                     mBase.move(.15, 0);
                     mVF.getVuMark();
-                } else {
+                } else if (!mVF.isVisible() && wait.milliseconds() > 4000) {
+                    mBase.stop();
+                     mVF.getVuMark();
+                    }
+                else {
                     vuMark = mVF.getVuMarkName();
                     //TODO: Remove after consistent.
                     mBase.stop();
@@ -215,8 +222,8 @@ public class AutoMain extends OpMode {
                      craterDir = -45;
                     //TODO: Clean up the range method to become more efficient.
                     //Move close to the wall.
-                    while (mBase.setRange(12.5) && bypassWDT) {
-                        mBase.move(mBase.rangeMove(12.5) , 0);
+                    while (mBase.setRange(13) && bypassWDT) {
+                        mBase.move(mBase.rangeMove(13) , 0);
                     }
                     //Turn parallel to the wall facing the depot.
                     while (mBase.setTurn(127) && bypassWDT) {
@@ -229,10 +236,10 @@ public class AutoMain extends OpMode {
                     } else { setState(State.DEPOTMARKER); }
                 }
                 else {
-                     craterDir = 85;
+                     craterDir = 45;
                     //Move close to the wall.
-                    while (mBase.setRange(12.5) && bypassWDT) {
-                        mBase.move(mBase.rangeMove(12.5) , 0);
+                    while (mBase.setRange(13) && bypassWDT) {
+                        mBase.move(mBase.rangeMove(13) , 0);
                     }
                     //Turn parallel to the wall facing the depot.
                     while (mBase.setTurn(-40) && bypassWDT) {
@@ -247,15 +254,14 @@ public class AutoMain extends OpMode {
                break;
 
             case DEPOTMARKER:
-                mBase.stop();
+               mBase.stop();
                 //Depositing the cube and manipulator using the intake.
-                //if (mBase.setRange()) {
-                    mManip.unlockDeposit();
-
+                //if (mBase.setRange())
                     //Turn to deposit position, which is also the direction facing the crater.
                     while (mBase.setTurn(craterDir)) {
                         mBase.move(0, mBase.turnAbsolute(.5, craterDir));
                     }
+                    mManip.unlockDeposit();
                     wait.reset();
                     setState(State.PARK);
                 //} //else { }
@@ -287,7 +293,7 @@ public class AutoMain extends OpMode {
                     mBase.move(.25, 0);
                 } else {
                     mBase.stop();
-                    mManip.intakePosition();
+                    //mManip.intakePosition();
                 }
                 break;
                 //Locate current position
