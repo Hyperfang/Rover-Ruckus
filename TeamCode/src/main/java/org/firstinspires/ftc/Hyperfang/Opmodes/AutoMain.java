@@ -314,11 +314,13 @@ public class AutoMain extends OpMode {
                         mBase.move(0, mBase.turnAbsolute(.5, craterDir));
                     }
                     mManip.unlockDeposit();
-                if (mBase.setRange(5) && !bypassWDT) {
-                    mBase.move(mBase.rangeMove(5), 0);
+
+                if (mBase.setRange(20) && !bypassWDT) {
+                    mBase.move(mBase.rangeMove(20), 0); //small "jerk"
                     wait.reset();
+
                     setState(State.PARK);
-                //} //else { }
+                } //else { }
                 break;
 
 
@@ -344,7 +346,7 @@ public class AutoMain extends OpMode {
                 break;
 */
             case PARK:
-                if (wait.milliseconds() < 4250) {
+                if (wait.milliseconds() < 4750) { //was 4250
                     mBase.move(.25, 0);
                 } else {
                     mBase.stop();
