@@ -72,7 +72,7 @@ public class Arcade extends OpMode {
         controls.intakePosition(gamepad2.left_bumper, intakePosDelay);
         controls.trapdoor(gamepad2.dpad_down, trapDelay);
 
-        //        //Deposit
+        //Deposit
         controls.deposit(gamepad2.b, depDelay);
 
         //Driver 2 controls Hanging: Ratchet, Ratchet Lock.
@@ -82,6 +82,7 @@ public class Arcade extends OpMode {
         // Show the elapsed game time and wheel power.
         telemetry.addData("Half Mode: ", controls.getSpeedToggle());
         telemetry.addData("Reverse Mode: ", controls.getDirectionToggle());
+        telemetry.addData("Ratchet Lock: ", controls.getRatchetLock());
         telemetry.addData("Status", "Run Time: " + runtime.toString());
     }
 

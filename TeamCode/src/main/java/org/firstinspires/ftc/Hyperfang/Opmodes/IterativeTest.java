@@ -50,9 +50,6 @@ public class IterativeTest extends OpMode {
     //Loop: Loops once driver hits play after start() runs.
     @Override
     public void loop() {
-        if (tf.getPos().equals(Tensorflow.Position.UNKNOWN)) {
-            tf.sample3();
-        }
         telemetry.addData("Position: ", tf.getPos());
     }
 

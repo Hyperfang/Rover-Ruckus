@@ -4,6 +4,7 @@ package org.firstinspires.ftc.Hyperfang.Sensors;
     Created by Caleb on 11/2/2018.
  */
 
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -23,7 +24,6 @@ public class Tensorflow {
     public enum Position { LEFT, CENTER, RIGHT, UNKNOWN }
     private Position pos;
     private boolean posFound = false;
-    private int[] order = new int[3];
 
     private OpMode mOpMode;
 

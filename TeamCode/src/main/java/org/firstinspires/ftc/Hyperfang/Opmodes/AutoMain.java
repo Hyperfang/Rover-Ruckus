@@ -122,6 +122,7 @@ public class AutoMain extends OpMode {
     public void loop() {
         //Sending our current state and state run time to our driver station.
         telemetry.addData(mState.toString(), StateTime.seconds());
+        telemetry.addData("Position: ", mTF.getPos());
         telemetry.addData("IMU", mBase.getHeading());
         telemetry.addData("Range", mBase.getRange());
 
@@ -160,14 +161,17 @@ public class AutoMain extends OpMode {
                     //Locate the gold.
                     if (!mTF.isPosFound() && wait.milliseconds() < 3000) {
                         //TODO: 66% chance of working (Doesn't work on right)
-                        mTF.sample2();
+                        if (mTF.getPos().equals(Tensorflow.Position.UNKNOWN)) {
+                            mTF.sample3();
+                        }
                         pos = mTF.getPos();
                          //TODO: Move removed once a camera which can see all 3 minerals is added.
                     } else {
+                        mTF.deactivate();
                         wait.reset();
                         setState(State.SAMPLE);
                     }
-                } else { telemetry.addData("Debug: ", mLift.getPosition()); }
+                } else { telemetry.addData("Debug: ", mTF.getPos()); }
                 break;
 
                 //TODO: Clean up for LM2 and add in Manipulator.
@@ -202,14 +206,14 @@ public class AutoMain extends OpMode {
                             break;
                     }
                 } else {
-                    while (wait.milliseconds() < 1600 && bypassWDTS) {
+                    while (wait.milliseconds() < 1800 && bypassWDTS) {
                         mBase.move(.25, 0);
                     }
                     if (bypassWDTS) {
                         wait.reset();
                         bypassWDTS = false;
                     }
-                    if (wait.milliseconds() < 1600) {
+                    if (wait.milliseconds() < 1800) {
                         mBase.move(-.25, 0);
                     } else {
                         mBase.stop();
@@ -288,14 +292,14 @@ public class AutoMain extends OpMode {
                     } else { setState(State.DEPOTMARKER); }
                 }
                 else {
-                     craterDir = 45;
+                     craterDir = 130;
                     //Move close to the wall.
                     while (mBase.setRange(12.75) && bypassWDT) {
                         mBase.move(mBase.rangeMove(12.75) , 0);
                     }
                     //Turn parallel to the wall facing the depot.
-                    while (mBase.setTurn(-130) && bypassWDT) {
-                        mBase.move(.25, mBase.turnAbsolute(.5, -130));
+                    while (mBase.setTurn(-45) && bypassWDT) {
+                        mBase.move(.25, mBase.turnAbsolute(.5, -45));
                     }
                     //Move to the depot.
                     bypassWDT = false;
@@ -314,13 +318,9 @@ public class AutoMain extends OpMode {
                         mBase.move(0, mBase.turnAbsolute(.5, craterDir));
                     }
                     mManip.unlockDeposit();
-
-                if (mBase.setRange(20) && !bypassWDT) {
-                    mBase.move(mBase.rangeMove(20), 0); //small "jerk"
                     wait.reset();
-
                     setState(State.PARK);
-                } //else { }
+                //} //else { }
                 break;
 
 
@@ -346,7 +346,7 @@ public class AutoMain extends OpMode {
                 break;
 */
             case PARK:
-                if (wait.milliseconds() < 4750) { //was 4250
+                if (wait.milliseconds() < 4250) {
                     mBase.move(.25, 0);
                 } else {
                     mBase.stop();

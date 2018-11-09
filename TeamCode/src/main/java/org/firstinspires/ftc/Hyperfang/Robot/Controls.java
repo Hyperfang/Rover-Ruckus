@@ -321,6 +321,8 @@ public class Controls {
         return new double[]{linear, turn};
     }
 
+    public boolean getRatchetLock() { return isRatchetLocked; }
+
     //Provides a method of easily testing servos.
     //Where x and y can be substituted for gamepad inputs.
     public double testServo(boolean x, boolean y, ElapsedTime delay) {
