@@ -18,6 +18,7 @@ public class Tensorflow {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
+    private static final int noGold = -1024;
     private TFObjectDetector tfod;
 
     //List of positions for gold minerals used in the relative sampling method.
@@ -105,7 +106,7 @@ public class Tensorflow {
             }
     }
 
-    //Locates the position of the gold cube and logs the position.
+    //Locates the position of the gold cube based on 2 minerals and logs the position.
     public void sample2() {
         if (tfod != null) {
             // getUpdatedRecognitions() will return null if no new information is available since
@@ -114,7 +115,7 @@ public class Tensorflow {
             if (updatedRecognitions != null) {
                 mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
                 if (updatedRecognitions.size() == 2) {
-                    int goldMinCheck = -1;
+                    int goldMinCheck = noGold;
                     int silverMinCheck = -1;
 
                     for (Recognition recognition : updatedRecognitions) {
@@ -126,61 +127,21 @@ public class Tensorflow {
                         }
                     }
 
-                    if (silverMinCheck != -1) { //Needs work
-                        if (goldMinCheck < silverMinCheck) {
+                    //Gold has a lesser integer value when it is on the left.
+                    if (silverMinCheck != -1) {
+                        if (goldMinCheck < silverMinCheck && goldMinCheck != noGold) {
                             pos = Position.LEFT;
                             posFound = true;
                             mOpMode.telemetry.addData("Gold Mineral Position", "Left");
-                        } else if (goldMinCheck == -1) {
-                            pos = Position.RIGHT;
-                            posFound = true;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Right");
-                        } else {
+                        }  else if (goldMinCheck > silverMinCheck && goldMinCheck != noGold) {
                             pos = Position.CENTER;
                             posFound = true;
                             mOpMode.telemetry.addData("Gold Mineral Position", "Center");
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    //Locates the position of the gold cube and logs the position.
-    public void sample3() {
-        if (tfod != null) {
-            // getUpdatedRecognitions() will return null if no new information is available since
-            // the last time that call was made.
-            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-            if (updatedRecognitions != null) {
-                mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
-                if (updatedRecognitions.size() == 2) {
-                    int goldMinCheck = -1;
-                    int silverMinCheck = -1;
-
-                    for (Recognition recognition : updatedRecognitions) {
-                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                            goldMinCheck = (int) recognition.getLeft();
-                        }
-                        else if (silverMinCheck == -1) {
-                            silverMinCheck = (int) recognition.getLeft();
-                            mOpMode.telemetry.addData("Silver: ", silverMinCheck);
-                        }
-                    }
-
-                    if (silverMinCheck != -1) { //Needs work
-                        if (goldMinCheck < silverMinCheck) {
-                            pos = Position.LEFT;
-                            posFound = true;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Left");
-                        } else if (goldMinCheck == -1) {
+                        else {
                             pos = Position.RIGHT;
                             posFound = true;
                             mOpMode.telemetry.addData("Gold Mineral Position", "Right");
-                        } else {
-                            pos = Position.CENTER;
-                            posFound = true;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Center");
                         }
                     }
                 }

@@ -73,11 +73,11 @@ public class ControlTest extends OpMode {
         controls.moveHLift(-gamepad2.right_stick_y);
 
         //Intake, Intake Position, Transfer
-        controls.intakePosition(gamepad2.right_bumper, intakePosDelay);
+        //controls.intakePosition(gamepad2.right_bumper, intakePosDelay);
         controls.trapdoor(gamepad2.left_bumper, trapDelay);
 
         //Deposit
-        controls.deposit(gamepad2.b, depDelay);
+        //controls.deposit(gamepad2.b, depDelay);
 
         //Driver 2 controls Hanging: Ratchet, Ratchet Lock.
         controls.moveRatchet(gamepad2.x);

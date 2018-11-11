@@ -57,7 +57,7 @@ public class Controls {
 
     public void initRobot() {
         lift.unlockRatchet();
-        manip.depositPosition();
+        //manip.depositPosition();
         manip.lockDeposit();
         lift.setPosition(Lift.LEVEL.GROUND);
     }
@@ -150,6 +150,7 @@ public class Controls {
         }
     }
 
+    //Toggles the direction of our robot allowing for easy backwards driving.
     private void toggleDirection(boolean toggle, ElapsedTime delay) {
         //Allows time for button release.
         if (delay.milliseconds() > 500) {
@@ -216,7 +217,6 @@ public class Controls {
     public void intakePosition(boolean toggle, ElapsedTime delay) {
         if (manip.incIntakePosition) {
             manip.intakePosition();
-            mOpMode.telemetry.addLine("HELP");
         }
         //Allows time for button release.
         else if (delay.milliseconds() > 300 && !manip.incIntakePosition) {

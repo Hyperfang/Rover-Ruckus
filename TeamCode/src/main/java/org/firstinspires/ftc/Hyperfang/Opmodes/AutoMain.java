@@ -49,6 +49,7 @@ public class AutoMain extends OpMode {
     private String vuMark;
     private int manipEnc;
     private double craterDir;
+    private int sampleTime;
 
     //TODO: Remove, Clean Up States, and replace while's with if's.
     //Variable which allows us to circumvent the watchdog timers for a bit.
@@ -103,7 +104,7 @@ public class AutoMain extends OpMode {
         //Must change once we add Latching.
         mLift.lockRatchet();
         mManip.lockDeposit();
-        mManip.depositPosition();
+        //mManip.depositPosition();
         mLift.setPosition(Lift.LEVEL.GROUND);
         mVF.activate();
         mTF.activate();
@@ -115,6 +116,7 @@ public class AutoMain extends OpMode {
         //Change to when we hit ground in future.
         mBase.initIMU(this);
         setState(State.FINDMIN);
+        wait.reset();
     }
 
     //Loop: Loops once driver hits play after start() runs.
@@ -159,19 +161,16 @@ public class AutoMain extends OpMode {
                     mLift.stop();
 
                     //Locate the gold.
-                    if (!mTF.isPosFound() && wait.milliseconds() < 3000) {
-                        //TODO: 66% chance of working (Doesn't work on right)
-                        if (mTF.getPos().equals(Tensorflow.Position.UNKNOWN)) {
-                            mTF.sample3();
-                        }
+                    if (pos.equals(Tensorflow.Position.UNKNOWN) && wait.milliseconds() < 3500) {
+                        mTF.sample2();
                         pos = mTF.getPos();
-                         //TODO: Move removed once a camera which can see all 3 minerals is added.
+                        //TODO: Move removed once a camera which can see all 3 minerals is added.
                     } else {
                         mTF.deactivate();
                         wait.reset();
                         setState(State.SAMPLE);
                     }
-                } else { telemetry.addData("Debug: ", mTF.getPos()); }
+                } else { telemetry.addData("Debug: ", mLift.getPosition()); }
                 break;
 
                 //TODO: Clean up for LM2 and add in Manipulator.
@@ -182,15 +181,18 @@ public class AutoMain extends OpMode {
                     switch (pos) {
                         //Check the center cube if the position is center, or unknown.
                         case UNKNOWN:
+                            sampleTime = 1800;
                             sampleReady = true;
                             break;
 
                         case CENTER:
+                            sampleTime = 1800;
                             sampleReady = true;
                             break;
 
                             //Turn Left.
                         case LEFT:
+                            sampleTime = 2500;
                             while (mBase.setTurn(19)) {
                                 mBase.move(0, mBase.turnAbsolute(.5, 19));
                             }
@@ -199,6 +201,7 @@ public class AutoMain extends OpMode {
 
                             //Turn right.
                         case RIGHT:
+                            sampleTime = 2500;
                             while (mBase.setTurn(-24)) {
                                 mBase.move(0, mBase.turnAbsolute(.5, -24));
                             }
@@ -206,14 +209,14 @@ public class AutoMain extends OpMode {
                             break;
                     }
                 } else {
-                    while (wait.milliseconds() < 1800 && bypassWDTS) {
+                    while (wait.milliseconds() < sampleTime && bypassWDTS) {
                         mBase.move(.25, 0);
                     }
                     if (bypassWDTS) {
                         wait.reset();
                         bypassWDTS = false;
                     }
-                    if (wait.milliseconds() < 1800) {
+                    if (wait.milliseconds() < sampleTime - 100) {
                         mBase.move(-.25, 0);
                     } else {
                         mBase.stop();

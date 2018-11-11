@@ -31,7 +31,7 @@ public class IterativeTest extends OpMode {
         //base = new Base(this);
         //base.initIMU(this);
         vuforia = new Vuforia(this);
-        tf = new Tensorflow(this, vuforia.getLocalizer(), "id");
+        tf = new Tensorflow(this, vuforia.getLocalizer());
         //Indicates that initialization is complete.
         telemetry.addLine("Initialized in " + runtime.milliseconds() + "ms");
     }
@@ -51,6 +51,7 @@ public class IterativeTest extends OpMode {
     @Override
     public void loop() {
         telemetry.addData("Position: ", tf.getPos());
+        tf.sample2();
     }
 
     //Stop: Runs once driver hits stop.

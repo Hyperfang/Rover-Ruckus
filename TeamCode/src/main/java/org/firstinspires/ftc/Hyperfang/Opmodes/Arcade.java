@@ -46,13 +46,13 @@ public class Arcade extends OpMode {
      *            Left Bumper, Right Bumper, B, Y
      *
      * Gamepad 2: Left Stick, Right Stick, Left Trigger, Right Trigger,
-     *            Left Bumper, Right Bumper, A, X B, Y
+     *            Left Bumper, Right Bumper, A, X, B, Y
      */
 
     @Override
     public void loop() {
         //For now, Driver 2 controls the Intake, and Hook.
-        //controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
+        controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
         controls.intake(gamepad2.right_trigger, gamepad2.left_trigger);
         controls.hook(gamepad1.b, hookDelay);
         controls.hook(gamepad2.y, hookDelay);
@@ -60,8 +60,8 @@ public class Arcade extends OpMode {
         //Driver 1 controls Driving: Base, Movement Modifiers
         controls.moveArcade();
 
-        //!Reverse Mode, Half-Speed, Reset (Half-Speed)
-        //controls.setDirectionButton(gamepad1.left_bumper, revDelay);
+        //Reverse Mode, Half-Speed, Reset (Half-Speed)
+        controls.setDirectionButton(gamepad1.left_bumper, revDelay);
         controls.setSpeedButtons(gamepad1.right_bumper, gamepad1.y, slowDelay);
 
         //Driver 2 controls Manipulation: Vertical Lift, Horizontal Lift,
@@ -69,11 +69,11 @@ public class Arcade extends OpMode {
         controls.moveHLift(-gamepad2.right_stick_y);
 
         //Intake, Intake Position, Transfer
-        controls.intakePosition(gamepad2.left_bumper, intakePosDelay);
+        //controls.intakePosition(gamepad2.left_bumper, intakePosDelay);
         controls.trapdoor(gamepad2.dpad_down, trapDelay);
 
         //Deposit
-        controls.deposit(gamepad2.b, depDelay);
+        //controls.deposit(gamepad2.b, depDelay);
 
         //Driver 2 controls Hanging: Ratchet, Ratchet Lock.
         controls.moveRatchet(gamepad2.x);
