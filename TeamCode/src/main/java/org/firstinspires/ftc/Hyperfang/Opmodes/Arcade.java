@@ -12,15 +12,6 @@ public class Arcade extends OpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
 
-    //Toggle Timers.
-    private ElapsedTime slowDelay = new ElapsedTime();
-    private ElapsedTime revDelay = new ElapsedTime();
-    private ElapsedTime intakePosDelay = new ElapsedTime();
-    private ElapsedTime trapDelay = new ElapsedTime();
-    private ElapsedTime ratchetDelay = new ElapsedTime();
-    private ElapsedTime hookDelay = new ElapsedTime();
-    private ElapsedTime depDelay = new ElapsedTime();
-
     //Instantiating the controls object.
     private Controls controls;
 
@@ -54,15 +45,15 @@ public class Arcade extends OpMode {
         //For now, Driver 2 controls the Intake, and Hook.
         controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
         controls.intake(gamepad2.right_trigger, gamepad2.left_trigger);
-        controls.hook(gamepad1.b, hookDelay);
-        controls.hook(gamepad2.y, hookDelay);
+        controls.hook(gamepad1.b);
+        controls.hook(gamepad2.y);
 
         //Driver 1 controls Driving: Base, Movement Modifiers
         controls.moveArcade();
 
         //Reverse Mode, Half-Speed, Reset (Half-Speed)
-        controls.setDirectionButton(gamepad1.left_bumper, revDelay);
-        controls.setSpeedButtons(gamepad1.right_bumper, gamepad1.y, slowDelay);
+        controls.setDirectionButton(gamepad1.left_bumper);
+        controls.setSpeedButtons(gamepad1.right_bumper, gamepad1.y);
 
         //Driver 2 controls Manipulation: Vertical Lift, Horizontal Lift,
         controls.moveVLift(-gamepad2.left_stick_y);
@@ -70,14 +61,14 @@ public class Arcade extends OpMode {
 
         //Intake, Intake Position, Transfer
         //controls.intakePosition(gamepad2.left_bumper, intakePosDelay);
-        controls.trapdoor(gamepad2.dpad_down, trapDelay);
+        controls.trapdoor(gamepad2.dpad_down);
 
         //Deposit
-        //controls.deposit(gamepad2.b, depDelay);
+        controls.deposit(gamepad2.b);
 
         //Driver 2 controls Hanging: Ratchet, Ratchet Lock.
         controls.moveRatchet(gamepad2.x);
-        controls.ratchetLock(gamepad2.a, ratchetDelay);
+        controls.ratchetLock(gamepad2.a);
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Half Mode: ", controls.getSpeedToggle());

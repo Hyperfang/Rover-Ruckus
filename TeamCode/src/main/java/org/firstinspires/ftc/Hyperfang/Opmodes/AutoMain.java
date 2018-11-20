@@ -2,16 +2,16 @@ package org.firstinspires.ftc.Hyperfang.Opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Robot.Lift;
 import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
-import org.firstinspires.ftc.Hyperfang.Sensors.OpenCV;
 import org.firstinspires.ftc.Hyperfang.Sensors.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
-@Autonomous (name="Main", group="Iterative Opmode")
+@Autonomous(name = "Main", group = "Iterative Opmode")
 public class AutoMain extends OpMode {
 
     //List of system states.
@@ -19,6 +19,7 @@ public class AutoMain extends OpMode {
         INITIAL,
         LAND,
         FINDMIN,
+        FACEMIN,
         SAMPLE,
         RESET,
         LOGNAV,
@@ -36,45 +37,43 @@ public class AutoMain extends OpMode {
     private Base mBase;
     private Manipulator mManip;
 
+    //Variables which pertain to the robot.
+    private boolean[] robotPath = new boolean[]{true, false, false, false};
+    private boolean[] manipPath = new boolean[]{true, false};
+
     //Runtime Variables
-    public ElapsedTime mRunTime = new ElapsedTime();
-    private ElapsedTime mInitTime = new ElapsedTime();
+    private ElapsedTime mRunTime = new ElapsedTime();
+    private ElapsedTime mStateTime = new ElapsedTime();
+    private double initTime;
 
     //Variables which log information about the current state of the state machine.
     private State mState;
-    private ElapsedTime StateTime = new ElapsedTime();
 
     //Logging Variables.
     private Tensorflow.Position pos;
     private String vuMark;
-    private int manipEnc;
     private double craterDir;
-    private int sampleTime;
+    private int sampleEnc;
 
-    //TODO: Remove, Clean Up States, and replace while's with if's.
-    //Variable which allows us to circumvent the watchdog timers for a bit.
-    private boolean bypassWDT;
-    private boolean bypassWDTS;
-    private boolean sampleReady;
-
-    //TODO: Wait variable for League Meet 1 to park.
-    //TODO: Wait variable which is a backup in case our state fails to occur.
+    //Wait variable which is a backup in case our state fails to occur.
     private ElapsedTime wait = new ElapsedTime();
 
     //Reset our state run timer and set a new state.
     private void setState(State nS) {
-        StateTime.reset();
+        mStateTime.reset();
         mState = nS;
     }
 
-//--------------------------------------------------------------------------------------------------
-    public AutoMain() {} //Default Constructor
+    //--------------------------------------------------------------------------------------------------
+    public AutoMain() {
+    } //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
     //Initialization: Runs once  driver presses init.
     @Override
     public void init() {
-        mInitTime.reset(); //Starting our initialization timer.
+        //Starting our initialization timer.
+        mStateTime.reset();
 
         //Instantiating our robot objects.
         mBase = new Base(this);
@@ -85,76 +84,56 @@ public class AutoMain extends OpMode {
 
         pos = Tensorflow.Position.UNKNOWN;
         vuMark = "";
-        bypassWDT = true;
-        bypassWDTS = true;
-        sampleReady = false;
 
-        //Indicates that initialization is complete.
-        telemetry.addData("Initialized", "in " + mInitTime.milliseconds() + "ms");
+        //Must change once we add Latching.
+        mLift.lockRatchet();
+        mLift.setPosition(Lift.LEVEL.GROUND);
+
+        //Locking the deposit and making sure that the intake is up.
+        mManip.lockDeposit();
+        //mManip.depositPosition();
+        initTime = mStateTime.milliseconds();
     }
 
     //Initialization Loop: Loops when driver presses init after init() runs.
     @Override
     public void init_loop() {
+        //Indicates that the full robot initialization is complete.
+        telemetry.addLine("Robot Initialized in " + initTime + "ms");
     }
 
     //Start: Runs once driver hits play.
     @Override
     public void start() {
-        //Must change once we add Latching.
-        mLift.lockRatchet();
-        mManip.lockDeposit();
-        //mManip.depositPosition();
-        mLift.setPosition(Lift.LEVEL.GROUND);
+        mRunTime.reset();
+
+        //Change to when we hit ground in future.
+        mBase.initIMU(this);
+
+        //Activating vision.
         mVF.activate();
         mTF.activate();
 
         //Clearing our telemetry dashboard.
         telemetry.clear();
-        mRunTime.reset();
-
-        //Change to when we hit ground in future.
-        mBase.initIMU(this);
-        setState(State.FINDMIN);
         wait.reset();
+        setState(State.FINDMIN);
     }
 
     //Loop: Loops once driver hits play after start() runs.
     @Override
     public void loop() {
         //Sending our current state and state run time to our driver station.
-        telemetry.addData(mState.toString(), StateTime.seconds());
+        telemetry.addData("Runtime: ", mRunTime.seconds());
+        telemetry.addData(mState.toString(), mStateTime.seconds());
         telemetry.addData("Position: ", mTF.getPos());
+        telemetry.addData("Vumark: ", vuMark);
         telemetry.addData("IMU", mBase.getHeading());
         telemetry.addData("Range", mBase.getRange());
+        telemetry.addData("Encoders", mBase.getEncoderPosition());
 
         switch (mState) {
-            //Stay until our magnetic limit switch is set.
-            /* case INITIAL:
-                if (mLift.mgl.isTouched()) {
-                    setState(State.LAND);
-                } else {
-                    telemetry.addData("Position:", mLift.getPosition());
-                }
-                break;
-
-            //Lower until we touch the ground
-            case LAND:
-                mLift.unlockRatchet();
-                while (mLift.getPosition().equals("LATCH")) {
-                    mLift.moveTo(Lift.LEVEL.GROUND, .5,  mLift.RatchetMotor());
-                    }
-                    mLift.stop;
-                    mLift.move(mLift.LiftMotor());
-                    mLift.unhook;
-                    mLift.stop;
-                    setState(State.FINDMIN);
-                } else {
-                    telemetry.addData("", "stuff");
-                }
-                break;
-*/
-            //TODO: Add web-cam and implement the working TensorFlow Sample Method.
+            //Log the position of the mineral.
             case FINDMIN:
                 //Lower our lift to the ground level.
                 if (mLift.getPosition().equals("GROUND")) {
@@ -164,200 +143,191 @@ public class AutoMain extends OpMode {
                     if (pos.equals(Tensorflow.Position.UNKNOWN) && wait.milliseconds() < 3500) {
                         mTF.sample2();
                         pos = mTF.getPos();
-                        //TODO: Move removed once a camera which can see all 3 minerals is added.
                     } else {
                         mTF.deactivate();
-                        wait.reset();
-                        setState(State.SAMPLE);
+                        setState(State.FACEMIN);
                     }
-                } else { telemetry.addData("Debug: ", mLift.getPosition()); }
+                }
+                //Debug
+                else {
+                    telemetry.addData("Debug: ", mLift.getPosition());
+                }
                 break;
 
-                //TODO: Clean up for LM2 and add in Manipulator.
+            //TODO: Change sampleEnc to encoders, currently using wait time (Waiting on Hardware).
+            //Turn towards the cube.
+            case FACEMIN:
+                //Check the center cube if the position is center, or unknown.
+                //Or Turn Left or Right depending on the position of the cube.
+                switch (pos) {
+                    case UNKNOWN:
+                    case CENTER:
+                        sampleEnc = 1800;
+                        robotPath[1] = true;
+                        break;
+
+                    case LEFT:
+                        sampleEnc = 2250;
+                        if (mBase.setTurn(25) && robotPath[0])
+                            mBase.move(0, mBase.turnAbsolute(25));
+                        else robotPath[1] = true;
+                        break;
+
+                    case RIGHT:
+                        sampleEnc = 2250;
+                        if (mBase.setTurn(-25) && robotPath[0])
+                            mBase.move(0, mBase.turnAbsolute(-25));
+                        else robotPath[1] = true;
+                        break;
+                }
+
+                if (robotPath[1]) {
+                    //mManip.resetEncoders();
+                    wait.reset();
+                    setState(State.SAMPLE);
+                }
+                break;
+
+            //Sample (reposition) the Cube by extending the intake, and intaking.
             case SAMPLE:
-                //Sample (reposition) the Cube.
-                if (!sampleReady) {
-                    //TODO: Simplify
-                    switch (pos) {
-                        //Check the center cube if the position is center, or unknown.
-                        case UNKNOWN:
-                            sampleTime = 1800;
-                            sampleReady = true;
-                            break;
-
-                        case CENTER:
-                            sampleTime = 1800;
-                            sampleReady = true;
-                            break;
-
-                            //Turn Left.
-                        case LEFT:
-                            sampleTime = 2500;
-                            while (mBase.setTurn(19)) {
-                                mBase.move(0, mBase.turnAbsolute(.5, 19));
-                            }
-                            sampleReady = true;
-                            break;
-
-                            //Turn right.
-                        case RIGHT:
-                            sampleTime = 2500;
-                            while (mBase.setTurn(-24)) {
-                                mBase.move(0, mBase.turnAbsolute(.5, -24));
-                            }
-                            sampleReady = true;
-                            break;
-                    }
+                /*            //TODO: Add in Manipulator (Waiting on Hardware).
+                if (manipPath[0] && !mManip.isActionComplete) {
+                    mManip.moveLift(.5, 1000);
+                } else if (manipPath[0]) {
+                    mManip.resetEncoderMove();
+                    mManip.intakePosition();
+                    manipPath[0] = false;
+                    manipPath[1] = true;
+                    wait.reset();
+                } else if (wait.milliseconds() < 1000) {
+                    mManip.setIntake(1);
+                } else if (manipPath[1] && !mManip.isActionComplete){
+                    mManip.setIntake(0);
+                    mManip.depositPosition();
+                    mManip.moveLift(-.5, 0);
                 } else {
-                    while (wait.milliseconds() < sampleTime && bypassWDTS) {
-                        mBase.move(.25, 0);
-                    }
-                    if (bypassWDTS) {
-                        wait.reset();
-                        bypassWDTS = false;
-                    }
-                    if (wait.milliseconds() < sampleTime - 100) {
-                        mBase.move(-.25, 0);
-                    } else {
-                        mBase.stop();
-                        wait.reset();
-                        setState(State.RESET);
-                    }
-                }
-                    //Lining up with the cube based on its position to our camera in relation to the robot.
-                    //mBase.move(0, mBase.turnRelative(.5, mCV.getGoldAngle()));
-
-                    //Intake the gold while tracking how far our manipulator moves.
-                    //Manipulator.resetEncoders();
-                    //manipEnc = Manipulator.getEncoders();
-
-                    //While (A. we see the gold or B. Range sensor is within X value) {
-                        //Manipulator.moveLift();
-                        //Manipulator.setIntake();
-                    // }
-                    //manipEnc -= Manipulator.getEncoders();
-
-                    //Start to retract the manipulator.
-                    //Manipulator.setIntake(0);
-                    //Manipulator.moveLift(.25, manipEnc);
-                break;
-            //TODO: Good example of state where we enter doing something, and exit.
-            case RESET:
-                //Reset to the starting position.
-                if (mBase.setTurn(0)) {
-                    mBase.move(0, mBase.turnAbsolute(.5, 0));
-                }
-                //Begin to log the navigation target.
-                else {
-                    while (mBase.setTurn(45)) {
-                        mBase.move(0, mBase.turnAbsolute(.5, 45));
-                    }
-                    mBase.move(.15, 0);
-                    wait.reset();
-                    setState(State.LOGNAV);
-                }
-                break;
-
-            case LOGNAV:
-                if (!mVF.isVisible() && wait.milliseconds() < 4000) {
-                    mBase.move(.15, 0);
-                    mVF.getVuMark();
-                } else if (!mVF.isVisible() && wait.milliseconds() > 4000) {
-                    mBase.stop();
-                     mVF.getVuMark();
-                    }
-                else {
-                    vuMark = mVF.getVuMarkName();
-                    //TODO: Remove after consistent.
-                    mBase.stop();
-                    setState(State.NAVDEPOT);
-                }
-                break;
-
-           case NAVDEPOT:
-                //Finding the target associated with the Crater Red and Crater Blue.
-                //Run until we can no longer see a target, then start using the range sensor.
-                if (vuMark.equals("Blue-Rover") || vuMark.equals("Red-Footprint")) {
-                     craterDir = -45;
-                    //TODO: Clean up the range method to become more efficient.
-                    //Move close to the wall.
-                    while (mBase.setRange(12.75) && bypassWDT) {
-                        mBase.move(mBase.rangeMove(12.75) , 0);
-                    }
-                    //Turn parallel to the wall facing the depot.
-                    while (mBase.setTurn(130) && bypassWDT) {
-                        mBase.move(.25, mBase.turnAbsolute(.5, 130));
-                    }
-                    //Move to the depot.
-                    bypassWDT = false;
-                    if (mBase.setRange(24) && !bypassWDT) {
-                        mBase.move(mBase.rangeMove(24), 0);
-                    } else { setState(State.DEPOTMARKER); }
-                }
-                else {
-                     craterDir = 130;
-                    //Move close to the wall.
-                    while (mBase.setRange(12.75) && bypassWDT) {
-                        mBase.move(mBase.rangeMove(12.75) , 0);
-                    }
-                    //Turn parallel to the wall facing the depot.
-                    while (mBase.setTurn(-45) && bypassWDT) {
-                        mBase.move(.25, mBase.turnAbsolute(.5, -45));
-                    }
-                    //Move to the depot.
-                    bypassWDT = false;
-                    if (mBase.setRange(24) && !bypassWDT) {
-                        mBase.move(mBase.rangeMove(24), 0);
-                    } else { setState(State.DEPOTMARKER); }
-                }
-               break;
-
-            case DEPOTMARKER:
-               mBase.stop();
-                //Depositing the cube and manipulator using the intake.
-                //if (mBase.setRange())
-                    //Turn to deposit position, which is also the direction facing the crater.
-                    while (mBase.setTurn(craterDir)) {
-                        mBase.move(0, mBase.turnAbsolute(.5, craterDir));
-                    }
-                    mManip.unlockDeposit();
-                    wait.reset();
-                    setState(State.PARK);
-                //} //else { }
-                break;
-
-
-/*          //TODO: Add for LM2.
-            case DEPOSITMIN:
-                // if () {} else {}
-                //put.one.in          OUTTAKE CODE THAT WE HAVE NOT DECIDED  ON
-                setState(State.PICKUPMIN);
-                break;
-
-            case PICKUPMIN:
-                // if () {} else {}
-                //put.one.in          OUTTAKE CODE THAT WE HAVE NOT DECIDED  ON
-                /* move.to.balls
-                extend.manip
-                manip.intake.on
-                wait(5)
-                bring.back.manip
-                separate.minerals
-                if (mRunTime.seconds() < 7.5) {
-                    setState(State.PARK);
+                    setState(State.RESET);
                 }
                 break;
 */
-            case PARK:
-                if (wait.milliseconds() < 4250) {
+                if (wait.milliseconds() < sampleEnc) {
                     mBase.move(.25, 0);
+                } else if (wait.milliseconds() < sampleEnc + 2050) {
+                    mBase.move(-.25, 0);
                 } else {
                     mBase.stop();
-                    //mManip.intakePosition();
+                    setState(State.RESET);
                 }
                 break;
-                //Locate current position
-                //Move to crater
+
+            //Reset to the starting position, then begin to log the navigation target.
+            case RESET:
+                if (mBase.setTurn(0) && robotPath[1]) mBase.move(0, mBase.turnAbsolute(0));
+                else {
+                    robotPath[1] = false;
+                    if (mBase.setTurn(43)) mBase.move(0, mBase.turnAbsolute(43));
+                    else {
+                        robotPath[1] = true;
+                        mBase.stop();
+                        mBase.resetEncoders();
+                        setState(State.LOGNAV);
+                    }
+                }
+                break;
+
+            //Move close to the wall and log the navigation target.
+            case LOGNAV:
+                if (mBase.setEnc(23) && robotPath[1]) {
+                    mBase.move(mBase.moveEncoders(23), 0);
+                    if (!mVF.isVisible()) mVF.getVuMark();
+                    else vuMark = mVF.getVuMarkName();
+                    wait.reset();
+                } else {
+                    mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
+                    robotPath[1] = false;
+
+                    //Backup Mechanism in case we aren't perpendicular with the wall or VuMark is not found.
+                    if (mBase.setTurn(48) && wait.milliseconds() < 2000) {
+                        mBase.move(0, mBase.turnAbsolute(48));
+                        if (!mVF.isVisible()) mVF.getVuMark();
+                        else vuMark = mVF.getVuMarkName();
+                    } else {
+                        mBase.stop();
+                        robotPath[1] = true;
+                        setState(State.NAVDEPOT);
+                    }
+                }
+                break;
+
+            //Navigating to the Depot based on the navigation target.
+            case NAVDEPOT:
+                //Finding the target associated with the Crater Red and Crater Blue.
+                if (vuMark.equals("Blue-Rover") || vuMark.equals("Red-Footprint"))
+                    craterDir = -45.5;
+                else
+                    craterDir = 134;
+
+                //Turn towards the crater.
+                if (mBase.setTurn(craterDir) && robotPath[1]) {
+                    mBase.move(0, mBase.turnAbsolute(craterDir));
+                } else {
+                    robotPath[1] = false;
+                    robotPath[2] = true;
+                }
+
+                //Move to the depot.
+                if (mBase.setRange(22) && robotPath[2]) {
+                    mBase.move(mBase.rangeMove(22),0);
+                } else if (!robotPath[1]){
+                    mBase.stop();
+                    setState(State.DEPOTMARKER);
+                }
+                break;
+
+            //Depositing the cube and team marker using the manipulator.
+            case DEPOTMARKER:
+                mBase.resetEncoders();
+                mManip.unlockDeposit();
+                wait.reset();
+                setState(State.DEPOSITMIN);
+                break;
+
+            case DEPOSITMIN:
+                mBase.stop();
+                setState(State.PICKUPMIN);
+
+                if (mRunTime.milliseconds() > 22500) {
+                    setState(State.PARK);
+                    wait.reset();
+                    //resetIntake();
+                }
+                break;
+
+            case PICKUPMIN:
+                mBase.stop();
+                setState(State.DEPOSITMIN);
+
+                if (mRunTime.milliseconds() > 22500) {
+                    setState(State.PARK);
+                    wait.reset();
+                    //resetIntake();
+                }
+                break;
+
+            //Parking into the crater.
+            case PARK:
+                //Move to the crater from the current position.
+                if (mBase.setEnc(31) && !robotPath[3]) mBase.move(mBase.moveEncoders(31), 0);
+                else {
+                    if (!robotPath[3]) wait.reset();
+                    robotPath[3] = true;
+                    if (wait.milliseconds() < 500) mBase.move(.3, 0);
+                    else {
+                        mBase.stop();
+                        //mManip.intakePosition();
+                    }
+                }
+                break;
         }
     }
 

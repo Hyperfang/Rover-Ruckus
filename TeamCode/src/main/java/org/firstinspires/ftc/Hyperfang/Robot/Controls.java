@@ -9,17 +9,27 @@ public class Controls {
     private Lift lift;
     private Manipulator manip;
 
+    //Drivetrain Variables
     private double linear;
     private double turn;
 
-    private ElapsedTime slowDelay;
-    private ElapsedTime revDelay;
-    private boolean revMode;
-    private boolean slowMode;
+    //Toggle Buttons
     private boolean revButton;
     private boolean slowButton;
     private boolean resetButton;
 
+    //Toggle Timers.
+    private ElapsedTime slowDelay = new ElapsedTime();
+    private ElapsedTime revDelay = new ElapsedTime();
+    private ElapsedTime intakePosDelay = new ElapsedTime();
+    private ElapsedTime trapDelay = new ElapsedTime();
+    private ElapsedTime depDelay = new ElapsedTime();
+    private ElapsedTime hookDelay = new ElapsedTime();
+    private ElapsedTime ratchetDelay = new ElapsedTime();
+
+    //Toggle Booleans
+    private boolean revMode;
+    private boolean slowMode;
     private boolean isRatchetLocked;
     private boolean isIntakePosition;
     private boolean isHook;
@@ -39,12 +49,10 @@ public class Controls {
         mOpMode.gamepad1.setJoystickDeadzone(.075f);
         mOpMode.gamepad2.setJoystickDeadzone(.075f);
 
-        slowDelay = new ElapsedTime();
         slowMode = false;
         slowButton = false;
         resetButton = false;
 
-        revDelay = new ElapsedTime();
         revMode = false;
         revButton = false;
 
@@ -67,8 +75,8 @@ public class Controls {
     public void moveArcade() {
         linear = -mOpMode.gamepad1.left_stick_y;
         turn = mOpMode.gamepad1.right_stick_x;
-        toggleSpeed(slowButton, resetButton, slowDelay);
-        toggleDirection(revButton, revDelay);
+        toggleSpeed(slowButton, resetButton);
+        toggleDirection(revButton);
         base.move(linear, turn);
     }
 
@@ -78,8 +86,8 @@ public class Controls {
         //In this case, linear refers to the left side, and turn to the right.
         linear = -mOpMode.gamepad1.left_stick_y;
         turn = -mOpMode.gamepad1.right_stick_y;
-        toggleSpeed(slowButton, resetButton, slowDelay);
-        toggleDirection(revButton, revDelay);
+        toggleSpeed(slowButton, resetButton);
+        toggleDirection(revButton);
         base.setPower(linear, turn);
     }
 
@@ -106,38 +114,37 @@ public class Controls {
         }
         //If our drive-train is moving linearly, then turn with a weighted amount based on turn.
         else if (linear != 0) {
-            turn = base.turnAbsolute(.5, AngleRStick - 180) * 3.25;
+            turn = base.turnAbsolute( AngleRStick - 180) * 3.25;
         }
         //If none of the following conditions apply, just turn.
         else {
-            turn = base.turnAbsolute(.5, AngleRStick - 180);
+            turn = base.turnAbsolute(AngleRStick - 180);
         }
 
-        toggleSpeed(slowButton, resetButton, slowDelay);
-        toggleDirection(revButton, revDelay);
+        toggleSpeed(slowButton, resetButton);
+        toggleDirection(revButton);
 
         base.move(linear, turn);
     }
 
     //Movement Modifier
     //Toggles the speed of our drive-train between normal and slow (half speed) mode.
-    private void toggleSpeed(boolean slow, boolean reset, ElapsedTime delay) {
+    private void toggleSpeed(boolean slow, boolean reset) {
         mOpMode.gamepad1.setJoystickDeadzone(.075f);
 
-        if (delay.milliseconds() > 500) {  //Allows time for button release.
+        if (slowDelay.milliseconds() > 500) {  //Allows time for button release.
             if (slow && !slowMode) { //Slow is the slow mode button.
                 mOpMode.gamepad1.setJoystickDeadzone(.15f);
                 slowMode = true;
-                delay.reset();
+                slowDelay.reset();
             } else if (slow) { //Setting to normal mode.
                 mOpMode.gamepad1.setJoystickDeadzone(.15f);
-                delay.reset();
                 slowMode = false;
-                delay.reset();
+                slowDelay.reset();
             } else if (reset) { //Reset is the reset button
                 mOpMode.gamepad1.setJoystickDeadzone(.15f);
                 slowMode = false;
-                delay.reset();
+                slowDelay.reset();
             }
         }
 
@@ -151,17 +158,17 @@ public class Controls {
     }
 
     //Toggles the direction of our robot allowing for easy backwards driving.
-    private void toggleDirection(boolean toggle, ElapsedTime delay) {
+    private void toggleDirection(boolean toggle) {
         //Allows time for button release.
-        if (delay.milliseconds() > 500) {
+        if (revDelay.milliseconds() > 500) {
             //Toggle is the reverse mode button.
             if (toggle && !revMode) {
                 revMode = true;
-                delay.reset();
+                revDelay.reset();
             } //Setting to normal mode.
             else if (toggle) {
                 revMode = false;
-                delay.reset();
+                revDelay.reset();
             }
         }
 
@@ -173,16 +180,14 @@ public class Controls {
     }
 
     //Identifies the buttons we are tracking to control our slow mode toggle.
-    public void setSpeedButtons(boolean slow, boolean reset, ElapsedTime delay) {
+    public void setSpeedButtons(boolean slow, boolean reset) {
         slowButton = slow;
         resetButton = reset;
-        slowDelay = delay;
     }
 
     //Identifies the buttons we are tracking to control our slow mode toggle.
-    public void setDirectionButton(boolean toggle, ElapsedTime delay) {
+    public void setDirectionButton(boolean toggle) {
         revButton = toggle;
-        revDelay = delay;
     }
 
     //Moves the Vertical lift.
@@ -214,94 +219,93 @@ public class Controls {
 
     }
 
-    public void intakePosition(boolean toggle, ElapsedTime delay) {
-        if (manip.incIntakePosition) {
-            manip.intakePosition();
-        }
+    public void intakePosition(boolean toggle) {
+        if (manip.incIntakePosition) { manip.intakePosition(); }
+
         //Allows time for button release.
-        else if (delay.milliseconds() > 300 && !manip.incIntakePosition) {
+        else if (intakePosDelay.milliseconds() > 300 && !manip.incIntakePosition) {
             //Toggle is the toggle button.
             if (toggle && isIntakePosition) {
                 isIntakePosition = false;
                 manip.depositPosition();
-                delay.reset();
+                intakePosDelay.reset();
             } //Setting to intake mode.
             else if (toggle) {
                 isIntakePosition = true;
                 manip.incIntakePosition = true;
-                delay.reset();
+                intakePosDelay.reset();
             }
         }
     }
 
     //Sets the position of the trapdoor.
-    public void trapdoor(boolean toggle, ElapsedTime delay) {
+    public void trapdoor(boolean toggle) {
         //Allows time for button release.
-        if (delay.milliseconds() > 250) {
+        if (trapDelay.milliseconds() > 250) {
             //Toggle is the trapdoor toggle button.
             if (toggle && isTrap) {
                 isTrap = false;
                 manip.holdMinerals();
-                delay.reset();
+                trapDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
                 isTrap = true;
                 manip.releaseMinerals();
-                delay.reset();
+                trapDelay.reset();
             }
         }
     }
 
     //Sets the position of the trapdoor.
-    public void deposit(boolean toggle, ElapsedTime delay) {
+    public void deposit(boolean toggle) {
         //Allows time for button release.
-        if (delay.milliseconds() > 250) {
+        if (depDelay.milliseconds() > 250) {
             //Toggle is the deposit toggle button.
             if (toggle && !isDeposit) {
                 isDeposit = true;
                 manip.unlockDeposit();
-                delay.reset();
+                depDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
                 isDeposit = false;
                 manip.lockDeposit();
-                delay.reset();
+                depDelay.reset();
             }
         }
     }
 
     //Locks or Unlocks the ratchet based on the state it is in.
-    public void ratchetLock(boolean toggle, ElapsedTime delay) {
+    public void ratchetLock(boolean toggle) {
         //Allows time for button release.
-        if (delay.milliseconds() > 500) {
+        if (ratchetDelay.milliseconds() > 500) {
             //Toggle is the ratchet toggle button.
             if (toggle && isRatchetLocked) {
                 isRatchetLocked = false;
                 lift.unlockRatchet();
-                delay.reset();
+                ratchetDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
                 isRatchetLocked = true;
                 lift.lockRatchet();
-                delay.reset();
+                ratchetDelay.reset();
             }
         }
     }
 
     //Locks or Unlocks the ratchet based on the state it is in.
-    public void hook(boolean toggle, ElapsedTime delay) {
+    public void hook(boolean toggle) {
         //Allows time for button release.
-        if (delay.milliseconds() > 500) {
+        if (hookDelay.milliseconds() > 500) {
             //Toggle is the hook toggle button.
             if (toggle && isHook) {
                 isHook = false;
                 lift.hook();
-                delay.reset();
+                hookDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
                 isHook = true;
                 lift.unhook();
-                delay.reset();
+                hookDelay.reset();
             }
         }
     }

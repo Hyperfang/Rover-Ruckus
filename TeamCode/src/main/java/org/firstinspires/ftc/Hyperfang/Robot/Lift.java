@@ -7,8 +7,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
 
 public class Lift {
-    public MGL mgl;
-
     public enum LEVEL {
         GROUND,
         LATCH,
@@ -21,6 +19,7 @@ public class Lift {
     private static DcMotor ratchetMotor;
     private Servo ratchetServo;
     private Servo hook; //Possibly change to continuous to ease Tele-Op.
+    private MGL mgl;
 
     private OpMode mOpMode;
 
@@ -133,13 +132,11 @@ public class Lift {
 
     //Unlocks the ratchet sets it in a state that is ready to be moved. "stop" disallows movement.
     public void unlockRatchet() {
-        ratchetServo.setPosition(.7);
+        ratchetServo.setPosition(.2);
     }
 
     //Locks the ratchet to prevent ratchet movement.
-    public void lockRatchet() {
-        ratchetServo.setPosition(1);
-    }
+    public void lockRatchet() { ratchetServo.setPosition(.65); }
 
     //Sets the position of our lift.
     public void setPosition(LEVEL position) {
@@ -152,7 +149,7 @@ public class Lift {
     }
 
     //Moves the hook to a position which we can hook.
-    public void hook() { hook.setPosition(.45); }
+    public void hook() { hook.setPosition(.25); }
 
     //Moves the hook to a position which we can unhook.
     public void unhook() { hook.setPosition(0.05); }

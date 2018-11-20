@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Manipulator {
 
     public boolean incIntakePosition = false;
+    public boolean isActionComplete = true;
     private OpMode mOpMode;
 
     private DcMotor liftMotor;
@@ -24,10 +25,10 @@ public class Manipulator {
     private Servo trapDoor;
 
     //Deposit Servos
-    private Servo depositA;
-    private Servo depositB;
+    private Servo deposit;
 
     private ElapsedTime intakeDelay = new ElapsedTime();
+    public boolean powerSet;
     private double intakeLeftPow = 1;
     private double intakeRightPow = 0;
 
@@ -42,12 +43,13 @@ public class Manipulator {
 
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        /*
         leftIntake = mOpMode.hardwareMap.get(Servo.class, "leftServo");
         rightIntake = mOpMode.hardwareMap.get(Servo.class, "rightServo");
         trapDoor = mOpMode.hardwareMap.get(Servo.class, "trapDoor");
+        */
 
-        depositA = mOpMode.hardwareMap.get(Servo.class, "depA");
-        depositB = mOpMode.hardwareMap.get(Servo.class, "depB");
+        deposit = mOpMode.hardwareMap.get(Servo.class, "deposit");
     }
 
     //Moves the horizontal lift using a given power.
@@ -61,13 +63,17 @@ public class Manipulator {
     public void moveLift(double power, int counts) {
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         liftMotor.setTargetPosition(counts);
-
-        liftMotor.setPower(power);
-
-        while (liftMotor.isBusy()) {
-            mOpMode.telemetry.addData("Current Encoder: ", getEncoders());
+        if (!powerSet) {
+            liftMotor.setPower(power);
+            powerSet = true;
         }
-        liftMotor.setPower(0);
+
+        if (liftMotor.isBusy()) {
+            mOpMode.telemetry.addData("Current Encoder: ", getEncoders());
+        } else {
+            liftMotor.setPower(0);
+            isActionComplete = true;
+        }
     }
 
     //Returns the current encoder value of the horizontal lift.
@@ -78,6 +84,14 @@ public class Manipulator {
     //Resets the encoder count.
     public void resetEncoders() {
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        powerSet = false;
+        isActionComplete = false;
+    }
+
+    //Resets the encoder method.
+    public void resetEncoderMove() {
+        powerSet = false;
+        isActionComplete = false;
     }
 
     /** Below represents method regarding the intake section of our Manipulator.*/
@@ -123,13 +137,11 @@ public class Manipulator {
     /** Below represents method regarding the deposit section of our Manipulator.*/
     //Unlocks the deposit disallowing transfer of minerals to the deposit.
     public void unlockDeposit() {
-        depositA.setPosition(.6);
-        depositB.setPosition(.6);
+        deposit.setPosition(.6);
     }
 
     //Locks the deposit disallowing transfer of minerals to the deposit.
     public void lockDeposit() {
-        depositA.setPosition(.125);
-        depositB.setPosition(.125);
+        deposit.setPosition(.125);
     }
 }

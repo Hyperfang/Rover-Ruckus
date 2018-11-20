@@ -59,7 +59,7 @@ public class Vuforia {
 
     //Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     private static final float mmPerInch = 25.4f;
-    private static final float mmFTCFieldWidth = (12 * 6) * mmPerInch;       // the width of the FTC field (from the center point to the outer panels)
+    private static final float mmFTCFieldWidth = (12 * 6) * mmPerInch;    // the width of the FTC field (from the center point to the outer panels)
     private static final float mmTargetHeight = (6) * mmPerInch;          // the height of the center of the target image above the floor
 
     //Variable we use to store our instance of the Vuforia localization engine.
@@ -197,10 +197,7 @@ public class Vuforia {
     //Extract the X, Y, and Z components of the target robot relative to the target.
     //Returning the x (forwards) value of the robot relative to the target.
     public float getDistanceX() {
-        if (targetVisible)
-
-
-            return trans.get(0) / mmPerInch;
+        if (targetVisible) return trans.get(0) / mmPerInch;
         return 0;
     }
 

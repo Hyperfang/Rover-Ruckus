@@ -28,8 +28,8 @@ public class IterativeTest extends OpMode {
         runtime = new ElapsedTime();
 
         //Instantiating our robot objects.
-        //base = new Base(this);
-        //base.initIMU(this);
+        base = new Base(this);
+        base.initIMU(this);
         vuforia = new Vuforia(this);
         tf = new Tensorflow(this, vuforia.getLocalizer());
         //Indicates that initialization is complete.
@@ -44,14 +44,28 @@ public class IterativeTest extends OpMode {
     //Start: Runs once driver hits play.
     @Override
     public void start() {
+        vuforia.activate();
         tf.activate();
+        base.resetEncoders();
     }
+
 
     //Loop: Loops once driver hits play after start() runs.
     @Override
     public void loop() {
-        telemetry.addData("Position: ", tf.getPos());
+        /*
+        if (base.setEnc(12))
+        {
+            base.move(base.moveEncoders(12), 0);
+        } else { base.stop(); }
+        */
+
+        telemetry.addData("IMU: ", base.getHeading());
+        telemetry.addData("RANGE: ", base.getRange());
         tf.sample2();
+        vuforia.getVuMark();
+        telemetry.addData("Vuforia: ", vuforia.isVisible());
+        telemetry.addData("Position: ", tf.getPos().name());
     }
 
     //Stop: Runs once driver hits stop.
