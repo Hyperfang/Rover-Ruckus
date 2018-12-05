@@ -74,11 +74,13 @@ public class Vuforia {
     private VuforiaTrackable backSpace;
     private List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
 
+    //Camera Choice
     private VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
 
+    //Variables which log vuMark information.
     private OpenGLMatrix lastLocation = null;
     private boolean targetVisible = false;
-
+    private String vuMarkName;
     private VectorF trans;
     private Orientation rot;
 
@@ -89,7 +91,7 @@ public class Vuforia {
         parameters.cameraDirection = CAMERA_CHOICE;
         parameters.useExtendedTracking = false;
 
-        //  Instantiate the Vuforia engine
+        //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
         initTrack();
     }
@@ -102,7 +104,7 @@ public class Vuforia {
         parameters.cameraDirection = CAMERA_CHOICE;
         parameters.useExtendedTracking = false;
 
-        //  Instantiate the Vuforia engine
+        //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
         initTrack();
@@ -126,7 +128,7 @@ public class Vuforia {
         phoneMatrix();
         lastLocation = OpenGLMatrix.translation(0, 0, 0);
 
-        // For convenience, gather together all the trackable objects in one easily-iterable collection */
+        //For convenience, gather together all the trackable objects in one easily-iterable collection */
         allTrackables.addAll(targetsRoverRuckus);
     }
 
@@ -144,9 +146,11 @@ public class Vuforia {
     //Also returns the location of our robot.
     public void getVuMark() {
         targetVisible = false;
+        vuMarkName = "";
         for (VuforiaTrackable trackable : allTrackables) {
             if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                 targetVisible = true;
+                vuMarkName = trackable.getName();
 
                 // getUpdatedRobotLocation() will return null if no new information is available since
                 // the last time that call was made, or if the Trackable is not currently visible.
@@ -165,24 +169,17 @@ public class Vuforia {
             //Express the rotation of the robot in degrees.
             rot = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
         }
-
-    }
-
-    //Finding our vuMark and returning only the name. Returns null if not found.
-    public String getVuMarkName() {
-        targetVisible = false;
-        for (VuforiaTrackable vuMark : allTrackables) {
-            if (((VuforiaTrackableDefaultListener) vuMark.getListener()).isVisible()) {
-                targetVisible = true;
-                return vuMark.getName(); //Logging the vuMark name.
-            }
-        }
-        return null;
     }
 
     //Returns whether or not the vuMark was visible in the last checked state.
     public boolean isVisible() {
         return (targetVisible);
+    }
+
+    //Finding our vuMark and returning only the name. Returns null if not found.
+    public String getVuMarkName() {
+        if (targetVisible) return vuMarkName;
+        return null;
     }
 
     //Returns the telemetry data of the last checked state.
@@ -332,8 +329,7 @@ public class Vuforia {
      * In this example, it is centered (left to right), but 110 mm forward of the middle of the robot, and 200 mm above ground level.
      */
     private void phoneMatrix() {
-        //Placing our camera on a matrix which allows us to move the robot based on the distance
-        //between
+        //Placing our camera on a matrix which allows us to move the robot based on the estimated field position.
         final int CAMERA_FORWARD_DISPLACEMENT = 110;   // eg: Camera is 110 mm in front of robot center
         final int CAMERA_VERTICAL_DISPLACEMENT = 200;   // eg: Camera is 200 mm above ground
         final int CAMERA_LEFT_DISPLACEMENT = 0;     // eg: Camera is ON the robot's center line
@@ -349,6 +345,7 @@ public class Vuforia {
         }
     }
 
+    //Formats the OpenGLMatrix into a String.
     private String format(OpenGLMatrix transformationMatrix) {
         return transformationMatrix.formatAsTransform();
     }

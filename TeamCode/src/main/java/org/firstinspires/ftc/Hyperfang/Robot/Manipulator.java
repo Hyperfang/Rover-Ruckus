@@ -11,26 +11,29 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 */
 
 public class Manipulator {
-
+    //Incremental Servo Control
     public boolean incIntakePosition = false;
     public boolean isActionComplete = true;
-    private OpMode mOpMode;
 
+    //Lift and Intake Motors
     private DcMotor liftMotor;
     private DcMotor intakeMotor;
+
+    //Deposit Servos
+    private Servo deposit;
 
     //Intake Servos
     private Servo leftIntake;
     private Servo rightIntake;
     private Servo trapDoor;
 
-    //Deposit Servos
-    private Servo deposit;
-
+    //Intake Variables
     private ElapsedTime intakeDelay = new ElapsedTime();
     public boolean powerSet;
     private double intakeLeftPow = 1;
     private double intakeRightPow = 0;
+
+    private OpMode mOpMode;
 
     //Initializes the manipulator objects.
     public Manipulator(OpMode opMode) {
@@ -94,7 +97,7 @@ public class Manipulator {
         isActionComplete = false;
     }
 
-    /** Below represents method regarding the intake section of our Manipulator.*/
+    /** Below represents methods regarding the intake section of our Manipulator.*/
     //Sets the the intake motor allowing us to run.
     public void setIntake(double power) {
         intakeMotor.setPower(power);
@@ -131,10 +134,10 @@ public class Manipulator {
 
     //Moves the trapdoor disallowing transfer of minerals to the deposit.
     public void holdMinerals() {
-        trapDoor.setPosition(.575);
+        trapDoor.setPosition(.5);
     }
 
-    /** Below represents method regarding the deposit section of our Manipulator.*/
+    /** Below represents methods regarding the deposit section of our Manipulator.*/
     //Unlocks the deposit disallowing transfer of minerals to the deposit.
     public void unlockDeposit() {
         deposit.setPosition(.6);

@@ -8,24 +8,29 @@ import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
 import org.firstinspires.ftc.Hyperfang.Sensors.Range;
 
 public class Base {
+    //Encoder Variables
     private static final double COUNTS_PER_MOTOR_REV = 1440;     // Rev Orbital 40:1
     private static final double DRIVE_GEAR_REDUCTION = 20 / 15.0;// Drive-Train Gear Ratio.
-    private static final double WHEEL_DIAMETER_INCHES = 4.0;     // Andymark Stealth/Omni Wheels
+    private static final double WHEEL_DIAMETER_INCHES = 4.0;     // AndyMark Stealth/Omni Wheels
     private static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) / (WHEEL_DIAMETER_INCHES * 3.1415);
 
+    //Tolerance Variables for the movement methods.
     private static final double encTolerance = 1;
-    private static final double turnTolerance = 5;
-    private static final double rangeTolerance = 2;
+    private static final double turnTolerance = 7.25;
+    private static final double rangeTolerance = 1;
 
+    //Logging variables of the Robot position.
     private double curEnc;
     private double curAng;
     private double curDis;
 
+    //Drive-train Motors.
     private DcMotor backLeft;
     private DcMotor frontRight;
     private DcMotor frontLeft;
     private DcMotor backRight;
 
+    //Sensor Instantiation
     private IMU imu;
     private Range rSensor;
 
@@ -47,8 +52,12 @@ public class Base {
         setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
+    //Initializes the IMU.
+    //Runs a loop until the IMU is initialized.
     public void initIMU(OpMode opMode) {
         imu = new IMU(opMode);
+        while (!imu.isGyroCalib())
+            stop();
     }
 
     //Sets the mode of the motors.
@@ -120,14 +129,13 @@ public class Base {
 
     //Moves the robot to a certain position using encoders.
     //resetEncoders() before running this in a loop unless you wish to add to the current position.
-    //TODO: Simplify speed
-    public double moveEncoders(double pos) {
+    public double encoderMove(double pos) {
         setModeEncoder(DcMotor.RunMode.RUN_TO_POSITION);
         setTargetPosition(pos);
         curEnc = getEncoderPosition();
         mOpMode.telemetry.addData("Position: ", curEnc);
 
-        if (setEnc(pos)) {
+        if (setEnc(pos) && isBaseBusy()) {
             //Insert PID HERE
             //Using the error to calculate our power.
             double power = (Math.abs(curEnc - (int) (pos * COUNTS_PER_INCH)) / 4000);
@@ -136,6 +144,7 @@ public class Base {
             if (curEnc < pos) return power;
             if (curEnc > pos) return -power;
         }
+        setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
         return 0;
     }
 
@@ -144,7 +153,14 @@ public class Base {
         return Math.abs(curEnc/COUNTS_PER_INCH - pos) > encTolerance;
     }
 
-    //Future: Remove power parameters from the turn methods.
+    //Returns true if all motors are busy.
+    private boolean isBaseBusy() {
+        if (!backRight.isBusy()) return false;
+        else if (!backLeft.isBusy()) return false;
+        else if (!frontLeft.isBusy()) return false;
+        else if (!frontRight.isBusy()) return false;
+        return true;
+    }
 
     //Turns to a desired angle in the fastest path using the IMU.
     //ABSOLUTE (Based on IMU initialization) where the right axis is a negative value.
@@ -166,7 +182,7 @@ public class Base {
             }
 
             //Using the error to calculate our power.
-            double newPow = (Math.abs(error) / 180);
+            double newPow = (Math.abs(error) / 190);
             if (newPow < .075) newPow = .075;
 
             //Insert I and D here.
@@ -216,9 +232,7 @@ public class Base {
     }
 
     //Returns whether our angle is not in the desired position. Useful for loops.
-    public boolean setTurn(double deg) {
-        return Math.abs(curAng - deg) > turnTolerance;
-    }
+    public boolean setTurn(double deg) { return Math.abs(curAng - deg) > turnTolerance; }
 
     //Moves to a position based on the distance from our range sensor.
     //Uses a P to control precision.
@@ -240,7 +254,7 @@ public class Base {
 
                 //Input I D here
                 double pow = (Math.abs(error) / 80);
-                if (pow > .65) pow = .65;
+                if (pow > .75) pow = .75;
                 if (pow < .075) pow = .075;
 
                 //If the sensor value is greater than the target, move backwards.

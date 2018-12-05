@@ -10,6 +10,7 @@ import org.firstinspires.ftc.Hyperfang.Robot.Controls;
 @TeleOp(name="Arcade", group="Iterative Opmode")
 public class Arcade extends OpMode {
 
+    //Runtime Variable
     private ElapsedTime runtime = new ElapsedTime();
 
     //Instantiating the controls object.
@@ -37,14 +38,14 @@ public class Arcade extends OpMode {
      *            Left Bumper, Right Bumper, B, Y
      *
      * Gamepad 2: Left Stick, Right Stick, Left Trigger, Right Trigger,
-     *            Left Bumper, Right Bumper, A, X, B, Y
+     *            Left Bumper, Right Bumper, A, B, Y, Right Bumper, Left Bumper
      */
 
     @Override
     public void loop() {
-        //For now, Driver 2 controls the Intake, and Hook.
-        controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
-        controls.intake(gamepad2.right_trigger, gamepad2.left_trigger);
+        //Both Drivers control the Intake, and Hook.
+        //controls.intake(gamepad1.right_trigger, gamepad1.left_trigger);
+        //controls.intake(gamepad2.right_trigger, gamepad2.left_trigger);
         controls.hook(gamepad1.b);
         controls.hook(gamepad2.y);
 
@@ -61,13 +62,13 @@ public class Arcade extends OpMode {
 
         //Intake, Intake Position, Transfer
         //controls.intakePosition(gamepad2.left_bumper, intakePosDelay);
-        controls.trapdoor(gamepad2.dpad_down);
+        //controls.trapdoor(gamepad2.dpad_down);
 
         //Deposit
         controls.deposit(gamepad2.b);
 
         //Driver 2 controls Hanging: Ratchet, Ratchet Lock.
-        controls.moveRatchet(gamepad2.x);
+        controls.moveRatchet(gamepad2.right_bumper, gamepad2.left_bumper);
         controls.ratchetLock(gamepad2.a);
 
         // Show the elapsed game time and wheel power.
@@ -80,5 +81,4 @@ public class Arcade extends OpMode {
     @Override
     public void stop() {
     }
-
 }

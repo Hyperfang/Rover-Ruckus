@@ -11,8 +11,8 @@ import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
 import org.firstinspires.ftc.Hyperfang.Sensors.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
-@Autonomous(name = "Main", group = "Iterative Opmode")
-public class AutoMain extends OpMode {
+@Autonomous(name = "Double Sample", group = "Iterative Opmode")
+public class DoubleSample extends OpMode {
 
     //List of system states.
     private enum State {
@@ -27,17 +27,17 @@ public class AutoMain extends OpMode {
         DEPOTMARKER,
         DEPOSITMIN,
         PICKUPMIN,
-        PARK
+        PARK,
     }
 
-    //Instantiating the robot objects.
+    //Robot objects which we use in the class.
     private Lift mLift;
     private Vuforia mVF;
     private Tensorflow mTF;
     private Base mBase;
     private Manipulator mManip;
 
-    //Variables which pertain to the robot movement.
+    //Variables which pertain to the robot.
     private boolean[] robotPath = new boolean[]{true, false, false, false};
     private boolean[] manipPath = new boolean[]{true, false};
 
@@ -60,6 +60,10 @@ public class AutoMain extends OpMode {
     private double craterDir;
     private double parkTurn;
 
+    //Double Sample Variables
+    private boolean doubleSample = false;
+    private double samplePosition = 0;
+
     //Wait variable which is a backup in case our state fails to occur.
     private ElapsedTime wait = new ElapsedTime();
 
@@ -69,8 +73,9 @@ public class AutoMain extends OpMode {
         mState = nS;
     }
 
-//--------------------------------------------------------------------------------------------------
-    public AutoMain() {} //Default Constructor
+    //--------------------------------------------------------------------------------------------------
+    public DoubleSample() {
+    } //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
     //Initialization: Runs once  driver presses init.
@@ -131,7 +136,7 @@ public class AutoMain extends OpMode {
         telemetry.addData("Runtime: ", mRunTime.seconds());
         telemetry.addData(mState.toString(), mStateTime.seconds());
         telemetry.addData("Position: ", mTF.getPos());
-        telemetry.addData("VuMark: ", vuMark);
+        telemetry.addData("Vumark: ", vuMark);
         telemetry.addData("IMU", mBase.getHeading());
         telemetry.addData("Range", mBase.getRange());
         telemetry.addData("Encoders", mBase.getEncoderPosition());
@@ -155,6 +160,7 @@ public class AutoMain extends OpMode {
                 break;
 
             //TODO: Change sampleEnc to encoders, currently using wait time (Waiting on Hardware).
+            //TODO: ADD DOUBLE SAMPLE ANGLES.
             //Turn towards the cube.
             case FACEMIN:
                 //Check the center cube if the position is center, or unknown.
@@ -180,9 +186,8 @@ public class AutoMain extends OpMode {
                         break;
                 }
 
-                //Turn if the cube is on the right or left.
-                if (sampleTurn != 0 && mBase.setTurn(sampleTurn))
-                    mBase.move(0, mBase.turnAbsolute(sampleTurn));
+                if (sampleTurn != 0 && mBase.setTurn(sampleTurn + samplePosition))
+                    mBase.move(0, mBase.turnAbsolute(sampleTurn + samplePosition));
                 else robotPath[1] = true;
 
                 if (robotPath[1]) {
@@ -226,15 +231,28 @@ public class AutoMain extends OpMode {
 
             //Reset to the starting position, then begin to log the navigation target.
             case RESET:
-                if (mBase.setTurn(0) && robotPath[1]) mBase.move(0, mBase.turnAbsolute(0));
-                else {
-                    robotPath[1] = false;
-                    if (mBase.setTurn(logTurn)) mBase.move(0, mBase.turnAbsolute(logTurn));
+                if (!doubleSample) {
+                    if (mBase.setTurn(0) && robotPath[1]) mBase.move(0, mBase.turnAbsolute(0));
                     else {
-                        robotPath[1] = true;
-                        mBase.stop();
-                        mBase.resetEncoders();
-                        setState(State.LOGNAV);
+                       robotPath[1] = false;
+                        if (mBase.setTurn(logTurn)) mBase.move(0, mBase.turnAbsolute(logTurn));
+                        else {
+                            robotPath[1] = true;
+                            doubleSample = true;
+                            samplePosition = -94;
+                            mBase.resetEncoders();
+                            setState(State.LOGNAV);
+                        }
+                    }
+                } else {
+                    if (mBase.setTurn(craterDir) && robotPath[1]) mBase.move(0, mBase.turnAbsolute(craterDir));
+                    else {
+                        if (mBase.setRange(8.5) && robotPath[1]) mBase.move(mBase.rangeMove(8.5), 0);
+                        else {
+                            robotPath[1] = true;
+                            mBase.resetEncoders();
+                            setState(State.DEPOSITMIN);
+                        }
                     }
                 }
                 break;
@@ -285,30 +303,32 @@ public class AutoMain extends OpMode {
                 }
 
                 //Move to the depot.
-                if (mBase.setRange(22) && robotPath[2]) {
-                    mBase.move(mBase.rangeMove(22),0);
-                } else if (!robotPath[1]){
+                if (mBase.setRange(10) && robotPath[2]) {
+                    mBase.move(mBase.rangeMove(10), 0);
+                } else if (!robotPath[1]) {
                     mBase.stop();
+                    robotPath[1] = true;
+                    robotPath[2] = false;
                     setState(State.DEPOTMARKER);
                 }
                 break;
 
             //Depositing the cube and team marker using the manipulator.
             case DEPOTMARKER:
-                mBase.resetEncoders();
                 mManip.unlockDeposit();
-                wait.reset();
-                setState(State.DEPOSITMIN);
+
+                //Turn towards the crater.
+                if (mBase.setTurn(samplePosition)) {
+                    mBase.move(0, mBase.turnAbsolute(samplePosition));
+                } else setState(State.FINDMIN);
                 break;
 
             case DEPOSITMIN:
                 mBase.stop();
                 setState(State.PICKUPMIN);
 
-                //Park when there is 7.5 seconds left.
                 if (mRunTime.milliseconds() > 22500) {
                     setState(State.PARK);
-                    wait.reset();
                     //resetIntake();
                 }
                 break;
@@ -317,10 +337,8 @@ public class AutoMain extends OpMode {
                 mBase.stop();
                 setState(State.DEPOSITMIN);
 
-                //Park when there is 7.5 seconds left.
                 if (mRunTime.milliseconds() > 22500) {
                     setState(State.PARK);
-                    wait.reset();
                     //resetIntake();
                 }
                 break;
@@ -328,15 +346,16 @@ public class AutoMain extends OpMode {
             //Parking into the crater.
             case PARK:
                 //Move to the crater from the current position.
-                if (mBase.setEnc(30) && !robotPath[3]) mBase.move(mBase.encoderMove(30), parkTurn);
+                if (mBase.setEnc(31) && !robotPath[3]) mBase.move(mBase.encoderMove(31), parkTurn);
                 else {
                     if (!robotPath[3]) wait.reset();
                     robotPath[3] = true;
                     //Make sure we are over the crater.
-                    //In the future we will extend the manip. mManip.intakePosition();
-                    if (wait.milliseconds() < 350) mBase.move(.5, 0);
+                    //In the future we will extend the manip.
+                    if (wait.milliseconds() < 500) mBase.move(.3, 0);
                     else {
                         mBase.stop();
+                        //mManip.intakePosition();
                     }
                 }
                 break;
@@ -345,5 +364,5 @@ public class AutoMain extends OpMode {
 
     //Stop: Runs once driver hits stop.
     @Override
-    public void stop() { }
+    public void stop() {}
 }

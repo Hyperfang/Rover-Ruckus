@@ -127,7 +127,6 @@ public class Lift {
     public void stop() {
         liftMotor.setPower(0);
         ratchetMotor.setPower(0);
-        lockRatchet();
     }
 
     //Unlocks the ratchet sets it in a state that is ready to be moved. "stop" disallows movement.
@@ -136,7 +135,10 @@ public class Lift {
     }
 
     //Locks the ratchet to prevent ratchet movement.
-    public void lockRatchet() { ratchetServo.setPosition(.65); }
+    public void lockRatchet() { ratchetServo.setPosition(.5); }
+
+    //For testing when faulty hardware effects the servo positions.
+    public void setRatchetLock(double pos) { ratchetServo.setPosition(pos); }
 
     //Sets the position of our lift.
     public void setPosition(LEVEL position) {
@@ -154,12 +156,11 @@ public class Lift {
     //Moves the hook to a position which we can unhook.
     public void unhook() { hook.setPosition(0.05); }
 
-    //Test whether passing this way will work.
+    //Returns the Lift motor.
     public DcMotor LiftMotor() {
         return liftMotor;
     }
 
-    public DcMotor RatchetMotor() {
-        return ratchetMotor;
-    }
+    //Returns the Ratchet motor.
+    public DcMotor RatchetMotor() { return ratchetMotor; }
 }
