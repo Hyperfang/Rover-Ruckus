@@ -27,7 +27,8 @@ public class AutoMain extends OpMode {
         DEPOTMARKER,
         DEPOSITMIN,
         PICKUPMIN,
-        PARK
+        PARK,
+        BACKUP
     }
 
     //Instantiating the robot objects.
@@ -92,6 +93,7 @@ public class AutoMain extends OpMode {
         //Must change once we add Latching.
         mLift.lockRatchet();
         mLift.setPosition(Lift.LEVEL.GROUND);
+        mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //Locking the deposit and making sure that the intake is up.
         mManip.lockDeposit();
@@ -104,6 +106,7 @@ public class AutoMain extends OpMode {
     public void init_loop() {
         //Indicates that the full robot initialization is complete.
         telemetry.addLine("Robot Initialized in " + initTime + "ms");
+
     }
 
     //Start: Runs once driver hits play.
@@ -176,7 +179,7 @@ public class AutoMain extends OpMode {
                     case RIGHT:
                         sampleEnc = 2200;
                         sampleTurn = -25;
-                        logTurn = 51;
+                        logTurn = 52;
                         break;
                 }
 
@@ -241,26 +244,17 @@ public class AutoMain extends OpMode {
 
             //Move close to the wall and log the navigation target.
             case LOGNAV:
-                if (mBase.setEnc(22.5) && robotPath[1]) {
-                    mBase.move(mBase.encoderMove(22.5), 0);
-                    if (!mVF.isVisible()) mVF.getVuMark();
-                    else vuMark = mVF.getVuMarkName();
-                    wait.reset();
-                } else {
-                    mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
-                    robotPath[1] = false;
+                if (!mVF.isVisible()) mVF.getVuMark();
+                else vuMark = mVF.getVuMarkName();
 
-                    //Backup Mechanism in case we aren't perpendicular with the wall or VuMark is not found.
-                    if (mBase.setTurn(46) || !mVF.isVisible()) {
-                        telemetry.addLine("VuMark not found. Finding VuMark...");
-                        mBase.move(0, mBase.turnAbsolute(46));
-                        mVF.getVuMark();
-                        if (mVF.isVisible()) vuMark = mVF.getVuMarkName();
-                    } else {
-                        mBase.stop();
-                        robotPath[1] = true;
-                        setState(State.NAVDEPOT);
-                    }
+                if (mBase.setEnc(22.5)) mBase.move(mBase.encoderMove(22.5), 0);
+                else {
+                    mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
+                    mBase.stop();
+                    wait.reset();
+
+                    if (mVF.isVisible()) setState(State.NAVDEPOT);
+                    else setState(State.BACKUP);
                 }
                 break;
 
@@ -269,11 +263,10 @@ public class AutoMain extends OpMode {
                 //Finding the target associated with the Crater Red and Crater Blue.
                 if (vuMark.equals("Blue-Rover") || vuMark.equals("Red-Footprint")) {
                     craterDir = -45;
-                    parkTurn = .1;
-                }
-                else {
-                    craterDir = 135;
                     parkTurn = -.1;
+                } else {
+                    craterDir = 135;
+                    parkTurn = .1;
                 }
 
                 //Turn towards the crater.
@@ -286,8 +279,8 @@ public class AutoMain extends OpMode {
 
                 //Move to the depot.
                 if (mBase.setRange(22) && robotPath[2]) {
-                    mBase.move(mBase.rangeMove(22),0);
-                } else if (!robotPath[1]){
+                    mBase.move(mBase.rangeMove(22), 0);
+                } else if (!robotPath[1]) {
                     mBase.stop();
                     setState(State.DEPOTMARKER);
                 }
@@ -328,16 +321,36 @@ public class AutoMain extends OpMode {
             //Parking into the crater.
             case PARK:
                 //Move to the crater from the current position.
-                if (mBase.setEnc(30) && !robotPath[3]) mBase.move(mBase.encoderMove(30), parkTurn);
+                if (mBase.setEnc(31) && !robotPath[3]) mBase.move(mBase.encoderMove(31), parkTurn);
                 else {
-                    if (!robotPath[3]) wait.reset();
+                    if (!robotPath[3]) {
+                        //mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
+                        wait.reset();
+                    }
                     robotPath[3] = true;
                     //Make sure we are over the crater.
                     //In the future we will extend the manip. mManip.intakePosition();
-                    if (wait.milliseconds() < 350) mBase.move(.5, 0);
+                    if (wait.milliseconds() < 400) mBase.move(.5, 0);
                     else {
+                        telemetry.addLine("Finished Parking.");
                         mBase.stop();
                     }
+                }
+                break;
+
+            //Backup Mechanism in case the VuMark is not found.
+            case BACKUP:
+                if (!mVF.isVisible()) {
+                    telemetry.addLine("VuMark not found. Finding VuMark...");
+                    mVF.getVuMark();
+
+                    if (wait.milliseconds() < 750) mBase.move(0, -.1);
+                    else if (wait.milliseconds() < 1500) mBase.stop();
+                    else wait.reset();
+                } else {
+                    vuMark = mVF.getVuMarkName();
+                    mBase.stop();
+                    setState(State.NAVDEPOT);
                 }
                 break;
         }
@@ -345,5 +358,6 @@ public class AutoMain extends OpMode {
 
     //Stop: Runs once driver hits stop.
     @Override
-    public void stop() { }
+    public void stop() {
+    }
 }

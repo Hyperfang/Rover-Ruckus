@@ -58,7 +58,7 @@ public class Arcade extends OpMode {
 
         //Driver 2 controls Manipulation: Vertical Lift, Horizontal Lift,
         controls.moveVLift(-gamepad2.left_stick_y);
-        controls.moveHLift(-gamepad2.right_stick_y);
+        //controls.moveHLift(-gamepad2.right_stick_y);
 
         //Intake, Intake Position, Transfer
         //controls.intakePosition(gamepad2.left_bumper, intakePosDelay);

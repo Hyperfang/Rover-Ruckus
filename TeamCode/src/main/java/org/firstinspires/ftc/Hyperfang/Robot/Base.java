@@ -117,6 +117,14 @@ public class Base {
         frontRight.setTargetPosition((int) (pos * COUNTS_PER_INCH));
     }
 
+    //Sets a target position for all the encoders to stop the motor from being busy.
+    private void stopTargetPosition() {
+        backLeft.setTargetPosition(backLeft.getCurrentPosition());
+        backRight.setTargetPosition(backRight.getCurrentPosition());
+        frontRight.setTargetPosition(frontRight.getCurrentPosition());
+        frontLeft.setTargetPosition(frontLeft.getCurrentPosition());
+    }
+
     //Calculates the current position for our encoders.
     public double getEncoderPosition() {
         double total = 0;
@@ -127,24 +135,43 @@ public class Base {
         return total / 4.0;
     }
 
-    //Moves the robot to a certain position using encoders.
+    //Moves the robot to a certain position using encoders via Position.
     //resetEncoders() before running this in a loop unless you wish to add to the current position.
     public double encoderMove(double pos) {
         setModeEncoder(DcMotor.RunMode.RUN_TO_POSITION);
         setTargetPosition(pos);
         curEnc = getEncoderPosition();
-        mOpMode.telemetry.addData("Position: ", curEnc);
 
-        if (setEnc(pos) && isBaseBusy()) {
+        if (setEnc(pos)) {
             //Insert PID HERE
             //Using the error to calculate our power.
             double power = (Math.abs(curEnc - (int) (pos * COUNTS_PER_INCH)) / 4000);
-            if (power < .075) power = .075;
+            if (power < .1) power = .1;
 
-            if (curEnc < pos) return power;
-            if (curEnc > pos) return -power;
+            if (curEnc < (int) (pos * COUNTS_PER_INCH)) return power;
+            if (curEnc > (int) (pos * COUNTS_PER_INCH)) return -power;
+        } else {
+            stopTargetPosition();
+            setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
+            stop();
         }
-        setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
+        return 0;
+    }
+
+    //Moves the robot to a certain position using encoders via Encoder.
+    //resetEncoders() before running this in a loop unless you wish to add to the current position.
+    public double encoderMove2(double pos) {
+        curEnc = getEncoderPosition();
+
+        if (setEnc(pos)) {
+            //Insert PID HERE
+            //Using the error to calculate our power.
+            double power = (Math.abs(curEnc - (int) (pos * COUNTS_PER_INCH)) / 4000);
+            if (power < .1) power = .1;
+
+            if (curEnc < (int) (pos * COUNTS_PER_INCH)) return power;
+            if (curEnc > (int) (pos * COUNTS_PER_INCH)) return -power;
+        }
         return 0;
     }
 
@@ -153,7 +180,7 @@ public class Base {
         return Math.abs(curEnc/COUNTS_PER_INCH - pos) > encTolerance;
     }
 
-    //Returns true if all motors are busy.
+    //Returns true if all motors are busy while encoders are ran using position.
     private boolean isBaseBusy() {
         if (!backRight.isBusy()) return false;
         else if (!backLeft.isBusy()) return false;

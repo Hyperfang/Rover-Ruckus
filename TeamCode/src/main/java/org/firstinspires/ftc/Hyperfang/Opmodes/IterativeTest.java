@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.Hyperfang.Opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.Hyperfang.Sensors.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
 
 @Autonomous(name="Test", group="Iterative Opmode")
+@Disabled
 public class IterativeTest extends OpMode {
 
 //--------------------------------------------------------------------------------------------------
@@ -55,7 +57,7 @@ public class IterativeTest extends OpMode {
     @Override
     public void loop() {
         vuforia.getVuMark();
-        tf.sample2();
+        tf.sample2();   
 
         telemetry.addData("IMU: ", base.getHeading());
         telemetry.addData("RANGE: ", base.getRange());
