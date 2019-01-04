@@ -6,8 +6,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.IMU;
 import org.firstinspires.ftc.Hyperfang.Sensors.Range;
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
 
+//Singleton Design Pattern
 public class Base {
+
+    //Singleton object
+    private static Base obj;
+    private static OpMode mOpMode;
+
     //Encoder Variables
     private static final double COUNTS_PER_MOTOR_REV = 1440;     // Rev Orbital 40:1
     private static final double DRIVE_GEAR_REDUCTION = 20 / 15.0;// Drive-Train Gear Ratio.
@@ -34,10 +41,24 @@ public class Base {
     private IMU imu;
     private Range rSensor;
 
-    private OpMode mOpMode;
+    //Initializes the base object.
+    public static Base getInstance() {
+        if (obj == null) {
+            throw new NullPointerException("Base Object not created with an OpMode.");
+        }
+        return obj;
+    }
 
-    //Initializes the base objects.
-    public Base(OpMode opMode) {
+    //Initializes the base object.
+    public static Base getInstance(OpMode opMode) {
+        if (obj == null) {
+            obj = new Base(opMode);
+        }
+        return obj;
+    }
+
+    //Initializes the base object.
+    private Base(OpMode opMode) {
         mOpMode = opMode;
         frontLeft = mOpMode.hardwareMap.get(DcMotor.class, "Front Left");
         frontRight = mOpMode.hardwareMap.get(DcMotor.class, "Front Right");
@@ -177,7 +198,7 @@ public class Base {
 
     //Returns whether our encoder is not in the desired position (Inches). Useful for loops.
     public boolean setEnc(double pos) {
-        return Math.abs(curEnc/COUNTS_PER_INCH - pos) > encTolerance;
+        return Math.abs(curEnc / COUNTS_PER_INCH - pos) > encTolerance;
     }
 
     //Returns true if all motors are busy while encoders are ran using position.
@@ -259,7 +280,9 @@ public class Base {
     }
 
     //Returns whether our angle is not in the desired position. Useful for loops.
-    public boolean setTurn(double deg) { return Math.abs(curAng - deg) > turnTolerance; }
+    public boolean setTurn(double deg) {
+        return Math.abs(curAng - deg) > turnTolerance;
+    }
 
     //Moves to a position based on the distance from our range sensor.
     //Uses a P to control precision.

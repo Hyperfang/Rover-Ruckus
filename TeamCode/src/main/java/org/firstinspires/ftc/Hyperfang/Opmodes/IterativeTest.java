@@ -7,11 +7,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Robot.Lift;
-import org.firstinspires.ftc.Hyperfang.Sensors.Tensorflow;
-import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
+import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
+import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
 
 @Autonomous(name="Test", group="Iterative Opmode")
-@Disabled
 public class IterativeTest extends OpMode {
 
 //--------------------------------------------------------------------------------------------------
@@ -21,7 +20,7 @@ public class IterativeTest extends OpMode {
     private ElapsedTime runtime;
     private Tensorflow tf;
     private Vuforia vuforia;
-    private Base base;
+    //private Base base;
     private Lift lift;
 
     //Initialization: Runs once driver presses init.
@@ -30,12 +29,12 @@ public class IterativeTest extends OpMode {
         runtime = new ElapsedTime();
 
         //Instantiating our robot objects.
-        base = new Base(this);
-        vuforia = new Vuforia(this);
-        tf = new Tensorflow(this, vuforia.getLocalizer());
-        lift = new Lift(this);
+        Base.getInstance(this);
+        //Base.getInstance().initIMU(this);
 
-        base.initIMU(this);
+       // vuforia = new Vuforia(this);
+        // tf = new Tensorflow(this, vuforia.getLocalizer());
+       // lift = new Lift(this);
 
         //Indicates that initialization is complete.
         telemetry.addLine("Initialized in " + runtime.milliseconds() + "ms");
@@ -48,27 +47,27 @@ public class IterativeTest extends OpMode {
     //Start: Runs once driver hits play.
     @Override
     public void start() {
-        base.resetEncoders();
-        vuforia.activate();
-        tf.activate();
+        Base.getInstance().resetEncoders();
+        //vuforia.activate();
+       // tf.activate();
     }
 
     //Loop: Loops once driver hits play after start() runs.
     @Override
     public void loop() {
-        vuforia.getVuMark();
-        tf.sample2();   
+       // vuforia.getVuMark();
+        //tf.sample();
 
-        telemetry.addData("IMU: ", base.getHeading());
-        telemetry.addData("RANGE: ", base.getRange());
-        telemetry.addData("ENCODERS: ", base.getEncoderPosition());
-        telemetry.addData("Vuforia: ", vuforia.isVisible());
-        telemetry.addData("Position: ", tf.getPos().name());
+        //telemetry.addData("IMU: ", Base.getInstance().getHeading());
+        telemetry.addData("RANGE: ", Base.getInstance().getRange());
+        telemetry.addData("ENCODERS: ", Base.getInstance().getEncoderPosition());
+       // telemetry.addData("Vuforia: ", vuforia.isVisible());
+      //  telemetry.addData("Position: ", tf.getPos().name());
     }
 
     //Stop: Runs once driver hits stop.
     @Override
     public void stop() {
-        tf.deactivate();
+       // tf.deactivate();
     }
 }

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.Hyperfang.Sensors;
+package org.firstinspires.ftc.Hyperfang.Vision;
 
 /*
     Created by Caleb on 11/2/2018.
@@ -68,11 +68,12 @@ public class Tensorflow {
     //Locates the position of the gold cube and logs the position.
     public void sample() {
             if (tfod != null) {
-                // getUpdatedRecognitions() will return null if no new information is available since
-                // the last time that call was made.
+                //getUpdatedRecognitions() will return null if no new information is available.
                 List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                 if (updatedRecognitions != null) {
                     mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
+
+                    //Samples based on 3 minerals.
                     if (updatedRecognitions.size() == 3) {
                         int goldMineralX = -1;
                         int silverMineral1X = -1;
@@ -102,51 +103,41 @@ public class Tensorflow {
                             }
                         }
                     }
-                }
-            }
-    }
 
-    //Locates the position of the gold cube based on 2 minerals and logs the position.
-    public void sample2() {
-        if (tfod != null) {
-            // getUpdatedRecognitions() will return null if no new information is available since
-            // the last time that call was made.
-            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-            if (updatedRecognitions != null) {
-                mOpMode.telemetry.addData("# Object Detected", updatedRecognitions.size());
-                if (updatedRecognitions.size() == 2) {
-                    int goldMinCheck = noGold;
-                    int silverMinCheck = -1;
+                    //Samples based on 2 minerals.
+                    if (updatedRecognitions.size() == 2) {
+                        int goldMinCheck = noGold;
+                        int silverMinCheck = -1;
 
-                    for (Recognition recognition : updatedRecognitions) {
-                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                            goldMinCheck = (int) recognition.getLeft();
+                        for (Recognition recognition : updatedRecognitions) {
+                            if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+                                goldMinCheck = (int) recognition.getLeft();
+                            }
+                            else if (silverMinCheck == -1) {
+                                silverMinCheck = (int) recognition.getLeft();
+                            }
                         }
-                        else if (silverMinCheck == -1) {
-                            silverMinCheck = (int) recognition.getLeft();
-                        }
-                    }
 
-                    //Gold has a lesser integer value when it is on the left.
-                    if (silverMinCheck != -1) {
-                        if (goldMinCheck < silverMinCheck && goldMinCheck != noGold) {
-                            pos = Position.LEFT;
-                            posFound = true;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Left");
-                        }  else if (goldMinCheck > silverMinCheck && goldMinCheck != noGold) {
-                            pos = Position.CENTER;
-                            posFound = true;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Center");
-                        }
-                        else {
-                            pos = Position.RIGHT;
-                            posFound = true;
-                            mOpMode.telemetry.addData("Gold Mineral Position", "Right");
+                        //Gold has a lesser integer value when it is on the left.
+                        if (silverMinCheck != -1) {
+                            if (goldMinCheck < silverMinCheck && goldMinCheck != noGold) {
+                                pos = Position.LEFT;
+                                posFound = true;
+                                mOpMode.telemetry.addData("Gold Mineral Position", "Left");
+                            }  else if (goldMinCheck > silverMinCheck && goldMinCheck != noGold) {
+                                pos = Position.CENTER;
+                                posFound = true;
+                                mOpMode.telemetry.addData("Gold Mineral Position", "Center");
+                            }
+                            else {
+                                pos = Position.RIGHT;
+                                posFound = true;
+                                mOpMode.telemetry.addData("Gold Mineral Position", "Right");
+                            }
                         }
                     }
                 }
             }
-        }
     }
 
 

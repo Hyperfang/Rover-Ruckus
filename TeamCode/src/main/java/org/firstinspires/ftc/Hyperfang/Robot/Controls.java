@@ -5,7 +5,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Controls {
     //Robot Object Instantiation
-    private Base base;
+    private static Controls obj;
+    private static OpMode mOpMode;
+
     private Lift lift;
     private Manipulator manip;
 
@@ -25,27 +27,40 @@ public class Controls {
     private ElapsedTime trapDelay = new ElapsedTime();
     private ElapsedTime depDelay = new ElapsedTime();
     private ElapsedTime hookDelay = new ElapsedTime();
-    private ElapsedTime ratchetDelay = new ElapsedTime();
     private ElapsedTime testTime = new ElapsedTime();
 
     //Toggle Booleans
     private boolean revMode;
     private boolean slowMode;
-    private boolean isRatchetLocked;
     private boolean isIntakePosition;
     private boolean isHook;
     private boolean isTrap;
     private boolean isDeposit;
 
-    private OpMode mOpMode;
     private double pos = 0;
 
+    //Initializes the Controls object.
+    public static Controls getInstance() {
+        if (obj == null) {
+            throw new NullPointerException("Control Object not created with an OpMode.");
+        }
+        return obj;
+    }
+
+    //Initializes the Controls object.
+    public static Controls getInstance(OpMode opMode) {
+        if (obj == null) {
+            obj = new Controls(opMode);
+        }
+        return obj;
+    }
+
     //Initializes the controls object.
-    public Controls(OpMode opMode) {
+    private Controls(OpMode opMode) {
         mOpMode = opMode;
-        base = new Base(opMode);
-        lift = new Lift(opMode);
-        manip = new Manipulator(opMode);
+        Base.getInstance(mOpMode);
+        //lift = new Lift(opMode);
+       // manip = new Manipulator(opMode);
 
         mOpMode.gamepad1.setJoystickDeadzone(.075f);
         mOpMode.gamepad2.setJoystickDeadzone(.075f);
@@ -57,7 +72,6 @@ public class Controls {
         revMode = false;
         revButton = false;
 
-        isRatchetLocked = false;
         isTrap = true;
         isDeposit = false;
         isIntakePosition = false;
@@ -67,8 +81,8 @@ public class Controls {
     //Initializes the robot.
     public void initRobot() {
         //manip.depositPosition();
-        manip.lockDeposit();
-        lift.setPosition(Lift.LEVEL.GROUND);
+        //manip.lockDeposit();
+        //lift.setPosition(Lift.LEVEL.GROUND);
     }
 
     //Drive Method
@@ -78,7 +92,7 @@ public class Controls {
         turn = mOpMode.gamepad1.right_stick_x;
         toggleSpeed(slowButton, resetButton);
         toggleDirection(revButton);
-        base.move(linear, turn);
+        Base.getInstance().move(linear, turn);
     }
 
     //Drive Method
@@ -89,42 +103,7 @@ public class Controls {
         turn = -mOpMode.gamepad1.right_stick_y;
         toggleSpeed(slowButton, resetButton);
         toggleDirection(revButton);
-        base.setPower(linear, turn);
-    }
-
-    //Drive Method (Discontinued)
-    //Gyro-Assisted TeleOp Mode uses left stick to go forward, and right stick to absolute turn.
-    //This drive method can be explained as using the robot from a top-down view.
-    public void moveGAT() {
-        linear = -mOpMode.gamepad1.left_stick_y;
-
-        //Right Stick Movement Control
-        double AngleRStick = Math.toDegrees(Math.atan2(mOpMode.gamepad1.right_stick_y, -mOpMode.gamepad1.right_stick_x));
-
-        //In order for the turning to adhere to the plane we start on, we need to reflect our x values.
-        if (AngleRStick < 0) {
-            AngleRStick += 360;
-        }
-
-        mOpMode.telemetry.addData("Desired: ", AngleRStick);
-
-        //Don't move if our right stick is at 0, or not a valid number (within axis).
-        if (Double.isNaN(AngleRStick) || (AngleRStick == 180 && mOpMode.gamepad1.right_stick_x != 1)) {
-            turn = 0;
-        }
-        //If our drive-train is moving linearly, then turn with a weighted amount based on turn.
-        else if (linear != 0) {
-            turn = base.turnAbsolute( AngleRStick - 180) * 3.25;
-        }
-        //If none of the following conditions apply, just turn.
-        else {
-            turn = base.turnAbsolute(AngleRStick - 180);
-        }
-
-        toggleSpeed(slowButton, resetButton);
-        toggleDirection(revButton);
-
-        base.move(linear, turn);
+        Base.getInstance().setPower(linear, turn);
     }
 
     //Movement Modifier
@@ -189,7 +168,7 @@ public class Controls {
     public void setDirectionButton(boolean toggle) {
         revButton = toggle;
     }
-
+/*
     //Moves the Vertical lift.
     public void moveVLift(double gamepad) {
         lift.move(gamepad, lift.LiftMotor());
@@ -199,19 +178,7 @@ public class Controls {
     public void moveHLift(double gamepad) {
         manip.moveLift(gamepad);
     }
-
-    //Moves the ratchet.
-    public void moveRatchet(double gamepad) {
-        lift.move(gamepad, lift.RatchetMotor());
-    }
-
-    //Moves the ratchet.
-    public void moveRatchet(boolean button1, boolean button2) {
-        if (button1) { lift.move(1, lift.RatchetMotor()); }
-        else if (button2) { lift.move(-1, lift.RatchetMotor()); }
-        else { lift.move(0, lift.RatchetMotor()); }
-    }
-
+*/
     //Runs the intake to collect or release minerals.
     public void intake(double gamepad, double gamepad2) {
         if (0 < Math.abs(gamepad))  { manip.setIntake(1); }
@@ -276,24 +243,8 @@ public class Controls {
         }
     }
 
-    //Locks or Unlocks the ratchet based on the state it is in.
-    public void ratchetLock(boolean toggle) {
-        //Allows time for button release.
-        if (ratchetDelay.milliseconds() > 500) {
-            //Toggle is the ratchet toggle button.
-            if (toggle && isRatchetLocked) {
-                isRatchetLocked = false;
-                lift.unlockRatchet();
-                ratchetDelay.reset();
-            } //Setting to locked mode.
-            else if (toggle) {
-                isRatchetLocked = true;
-                lift.lockRatchet();
-                ratchetDelay.reset();
-            }
-        }
-    }
 
+/*
     //Locks or Unlocks the ratchet based on the state it is in.
     public void hook(boolean toggle) {
         //Allows time for button release.
@@ -311,6 +262,7 @@ public class Controls {
             }
         }
     }
+    */
 
     //Returns our drive variables.
     public boolean getSpeedToggle() {
@@ -326,9 +278,6 @@ public class Controls {
     public double[] getDriveValue() {
         return new double[]{linear, turn};
     }
-
-    //Returns whether the ratchet is locked.
-    public boolean getRatchetLock() { return isRatchetLocked; }
 
     //Returns the current position of the lift.
     public String getLevel() {
@@ -350,7 +299,4 @@ public class Controls {
         }
         return pos;
     }
-
-    //For testing when faulty hardware effects the servo positions.
-    public void setRatchetLock(double pos) { lift.setRatchetLock(pos); }
 }

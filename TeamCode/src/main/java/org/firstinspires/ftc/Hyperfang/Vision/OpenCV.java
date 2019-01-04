@@ -4,7 +4,7 @@
         Finding of distance in Z axis CM done by Daniel Kasabov.
  */
 
-package org.firstinspires.ftc.Hyperfang.Sensors;
+package org.firstinspires.ftc.Hyperfang.Vision;
 
 import android.graphics.Bitmap;
 
@@ -37,8 +37,8 @@ public class OpenCV {
     private Point cameraDimensions;
     private Point cameraMidpoint;
     private double pixelRep;
-    private double FOV = 76; //CHANGE EITHER CALCULATE OR INPUT
-    private static final double ppiMotoGPlay = 294;
+    private double FOV = 76;
+    //private static final double ppiMotoGPlay = 294;
 
     private boolean goldFound = false;
     private Point goldMidpoint;

@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Robot.Lift;
 import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
-import org.firstinspires.ftc.Hyperfang.Sensors.Tensorflow;
-import org.firstinspires.ftc.Hyperfang.Sensors.Vuforia;
+import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
+import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
 
 @Autonomous(name = "Main", group = "Iterative Opmode")
 public class AutoMain extends OpMode {
@@ -81,7 +81,7 @@ public class AutoMain extends OpMode {
         mStateTime.reset();
 
         //Instantiating our robot objects.
-        mBase = new Base(this);
+        //mBase = new Base(this);
         mLift = new Lift(this);
         mVF = new Vuforia();
         mTF = new Tensorflow(this, mVF.getLocalizer());
@@ -148,7 +148,7 @@ public class AutoMain extends OpMode {
 
                     //Locate the gold.
                     if (pos.equals(Tensorflow.Position.UNKNOWN) && wait.milliseconds() < 3500) {
-                        mTF.sample2();
+                        mTF.sample();
                         pos = mTF.getPos();
                     } else {
                         mTF.deactivate();

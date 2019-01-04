@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.Hyperfang.Sensors;
+package org.firstinspires.ftc.Hyperfang.Vision;
 
 import android.graphics.Bitmap;
 
@@ -8,6 +8,7 @@ import com.vuforia.PIXEL_FORMAT;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -84,6 +85,7 @@ public class Vuforia {
     private VectorF trans;
     private Orientation rot;
 
+    private WebcamName webcam;
     //Initializes our vuforia object without a camera monitor.
     public Vuforia() {
         parameters = new VuforiaLocalizer.Parameters();
@@ -98,10 +100,11 @@ public class Vuforia {
 
     //Initializes our vuforia object with a camera monitor.
     public Vuforia(OpMode opMode) {
+        webcam = opMode.hardwareMap.get(WebcamName.class, "uvccam");
         int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = CAMERA_CHOICE;
+        parameters.cameraName = webcam;
         parameters.useExtendedTracking = false;
 
         //Instantiate the Vuforia engine

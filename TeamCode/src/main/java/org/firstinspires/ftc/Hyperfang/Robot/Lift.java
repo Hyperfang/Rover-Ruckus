@@ -15,23 +15,31 @@ public class Lift {
 
     private LEVEL pos;
 
-    private static DcMotor liftMotor;
-    private static DcMotor ratchetMotor;
+    private static DcMotor liftMotorR;
+    private static DcMotor liftMotorL;
+    private static DcMotor pivotMotorR;
+    private static DcMotor pivotMotorL;
     private Servo ratchetServo;
-    private Servo hook; //Possibly change to continuous to ease Tele-Op.
+    private Servo hookR;
+    private Servo hookL;
+
     private MGL mgl;
 
     private OpMode mOpMode;
 
+    //pivot bac 2
+    //lift gears 2
     //Initializes the lift objects.
     public Lift(OpMode opMode){
         mOpMode = opMode;
-        liftMotor = mOpMode.hardwareMap.get(DcMotor.class, "vLift");
-        ratchetMotor = mOpMode.hardwareMap.get(DcMotor.class, "ratchet");
-        ratchetServo = mOpMode.hardwareMap.get(Servo.class, "rServo");
-        hook = mOpMode.hardwareMap.get(Servo.class, "hook");
+        liftMotorR = mOpMode.hardwareMap.get(DcMotor.class, "Lift Right");
+        liftMotorL = mOpMode.hardwareMap.get(DcMotor.class, "Lift Left");
+        pivotMotorR = mOpMode.hardwareMap.get(DcMotor.class, "Pivot Right");
+        pivotMotorL = mOpMode.hardwareMap.get(DcMotor.class, "Pivot Left");
+        hookR = mOpMode.hardwareMap.get(Servo.class, "Right Hook");
+        hookL = mOpMode.hardwareMap.get(Servo.class, "Left Hook");
 
-        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotorR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         mgl = new MGL(opMode);
         pos = LEVEL.GROUND;
@@ -125,8 +133,7 @@ public class Lift {
 
     //Stops the lift/ratchet.
     public void stop() {
-        liftMotor.setPower(0);
-        ratchetMotor.setPower(0);
+       // liftMotor.setPower(0);
     }
 
     //Unlocks the ratchet sets it in a state that is ready to be moved. "stop" disallows movement.
@@ -151,16 +158,14 @@ public class Lift {
     }
 
     //Moves the hook to a position which we can hook.
-    public void hook() { hook.setPosition(.25); }
+    //public void hook() { hook.setPosition(.25); }
 
     //Moves the hook to a position which we can unhook.
-    public void unhook() { hook.setPosition(0.05); }
+    //public void unhook() { hook.setPosition(0.05); }
 
     //Returns the Lift motor.
-    public DcMotor LiftMotor() {
-        return liftMotor;
-    }
+    //public DcMotor LiftMotor() {
+    //    return liftMotor;
+    //}
 
-    //Returns the Ratchet motor.
-    public DcMotor RatchetMotor() { return ratchetMotor; }
 }
