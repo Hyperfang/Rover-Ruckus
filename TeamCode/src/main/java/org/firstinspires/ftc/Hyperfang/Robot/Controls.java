@@ -8,7 +8,6 @@ public class Controls {
     private static Controls obj;
     private static OpMode mOpMode;
 
-    private Lift lift;
     private Manipulator manip;
 
     //Speed Variables
@@ -58,8 +57,8 @@ public class Controls {
     //Initializes the controls object.
     private Controls(OpMode opMode) {
         mOpMode = opMode;
-        Base.getInstance(mOpMode);
-        //lift = new Lift(opMode);
+        Base.getInstance(opMode);
+        Lift.getInstance(opMode);
        // manip = new Manipulator(opMode);
 
         mOpMode.gamepad1.setJoystickDeadzone(.075f);
@@ -168,23 +167,22 @@ public class Controls {
     public void setDirectionButton(boolean toggle) {
         revButton = toggle;
     }
-/*
-    //Moves the Vertical lift.
-    public void moveVLift(double gamepad) {
-        lift.move(gamepad, lift.LiftMotor());
+
+    //Pivots the Lift.
+    public void pivotLift(double gamepad) {
+        Lift.getInstance().pivot(gamepad);
     }
 
-    //Moves the Horizontal lift.
-    public void moveHLift(double gamepad) {
-        manip.moveLift(gamepad);
+    //Moves the Lift.
+    public void moveLift(double gamepad) {
+        Lift.getInstance().moveLift(gamepad);
     }
-*/
+
     //Runs the intake to collect or release minerals.
     public void intake(double gamepad, double gamepad2) {
         if (0 < Math.abs(gamepad))  { manip.setIntake(1); }
         else if (0 < Math.abs(gamepad2)) { manip.setIntake(-1); }
         else { manip.setIntake(0); }
-
     }
 
     //Moves the intake to a certain position.
@@ -280,8 +278,8 @@ public class Controls {
     }
 
     //Returns the current position of the lift.
-    public String getLevel() {
-        return lift.getPosition();
+   public String getLevel() {
+        return Lift.getInstance().getPosition();
     }
 
     //Provides a method of easily testing servos where x and y can be substituted for gamepad inputs.

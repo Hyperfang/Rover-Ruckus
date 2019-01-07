@@ -82,7 +82,7 @@ public class AutoMain extends OpMode {
 
         //Instantiating our robot objects.
         //mBase = new Base(this);
-        mLift = new Lift(this);
+       // mLift = new Lift(this);
         mVF = new Vuforia();
         mTF = new Tensorflow(this, mVF.getLocalizer());
         mManip = new Manipulator(this);
@@ -91,8 +91,7 @@ public class AutoMain extends OpMode {
         vuMark = "";
 
         //Must change once we add Latching.
-        mLift.lockRatchet();
-        mLift.setPosition(Lift.LEVEL.GROUND);
+        //mLift.setPosition(Lift.LEVEL.GROUND);
         mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //Locking the deposit and making sure that the intake is up.
@@ -144,7 +143,7 @@ public class AutoMain extends OpMode {
             case FINDMIN:
                 //Lower our lift to the ground level.
                 if (mLift.getPosition().equals("GROUND")) {
-                    mLift.stop();
+                    //mLift.stop();
 
                     //Locate the gold.
                     if (pos.equals(Tensorflow.Position.UNKNOWN) && wait.milliseconds() < 3500) {

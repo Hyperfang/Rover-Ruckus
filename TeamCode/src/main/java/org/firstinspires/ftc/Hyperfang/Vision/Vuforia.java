@@ -100,7 +100,7 @@ public class Vuforia {
 
     //Initializes our vuforia object with a camera monitor.
     public Vuforia(OpMode opMode) {
-        webcam = opMode.hardwareMap.get(WebcamName.class, "uvccam");
+        webcam = opMode.hardwareMap.get(WebcamName.class, "UVC");
         int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         parameters.vuforiaLicenseKey = VUFORIA_KEY;

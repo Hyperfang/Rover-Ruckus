@@ -88,7 +88,7 @@ public class DoubleSample extends OpMode {
 
         //Instantiating our robot objects.
         //mBase = new Base(this);
-        mLift = new Lift(this);
+        //mLift = new Lift(this);
         mVF = new Vuforia();
         mTF = new Tensorflow(this, mVF.getLocalizer());
         mManip = new Manipulator(this);
@@ -97,8 +97,7 @@ public class DoubleSample extends OpMode {
         vuMark = "";
 
         //Must change once we add Latching.
-        mLift.lockRatchet();
-        mLift.setPosition(Lift.LEVEL.GROUND);
+        //mLift.setPosition(Lift.LEVEL.GROUND);
         mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
 
 

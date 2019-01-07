@@ -2,170 +2,176 @@ package org.firstinspires.ftc.Hyperfang.Robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
 
 public class Lift {
     public enum LEVEL {
-        GROUND,
-        LATCH,
-        TOP,
+        COLLECT,
+        DEPOSIT,
     }
 
+    private static Lift obj;
+    private static OpMode mOpMode;
     private LEVEL pos;
+    private static final double encTolerance = 10;
 
     private static DcMotor liftMotorR;
     private static DcMotor liftMotorL;
     private static DcMotor pivotMotorR;
     private static DcMotor pivotMotorL;
-    private Servo ratchetServo;
     private Servo hookR;
     private Servo hookL;
 
     private MGL mgl;
 
-    private OpMode mOpMode;
+    private int pivotEnc;
+    private int liftEnc;
 
-    //pivot bac 2
-    //lift gears 2
+    private ElapsedTime PoT = new ElapsedTime();
+
+    //Initializes the base object.
+    public static Lift getInstance() {
+        if (obj == null) {
+            throw new NullPointerException("Lift Object not created with an OpMode.");
+        }
+        return obj;
+    }
+
+    //Initializes the base object.
+    public static Lift getInstance(OpMode opMode) {
+        if (obj == null) {
+            obj = new Lift(opMode);
+        }
+        return obj;
+    }
+
     //Initializes the lift objects.
-    public Lift(OpMode opMode){
+    private Lift(OpMode opMode){
         mOpMode = opMode;
         liftMotorR = mOpMode.hardwareMap.get(DcMotor.class, "Lift Right");
         liftMotorL = mOpMode.hardwareMap.get(DcMotor.class, "Lift Left");
         pivotMotorR = mOpMode.hardwareMap.get(DcMotor.class, "Pivot Right");
         pivotMotorL = mOpMode.hardwareMap.get(DcMotor.class, "Pivot Left");
-        hookR = mOpMode.hardwareMap.get(Servo.class, "Right Hook");
-        hookL = mOpMode.hardwareMap.get(Servo.class, "Left Hook");
+        //hookR = mOpMode.hardwareMap.get(Servo.class, "Right Hook");
+        //hookL = mOpMode.hardwareMap.get(Servo.class, "Left Hook");
 
-        liftMotorR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotorL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftMotorR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        resetPivotPosition();
+        resetLiftPosition();
 
         mgl = new MGL(opMode);
-        pos = LEVEL.GROUND;
+        setPosition(LEVEL.COLLECT);
     }
 
-    //Moves to a specified position of the lift depending on the current position.
-    public void moveTo(LEVEL lvl, double power, DcMotor motor) {
-        switch (lvl) {
-            case GROUND:
-                if(!pos.equals(lvl)) move(power, motor);
-
-                if (pos.equals(lvl)) {
-                    motor.setPower(0);
-                    setPosition(LEVEL.GROUND);
-                    break;
-                }
-                break;
-            case LATCH:
-                if(!pos.equals(lvl)) move(power, motor);
-
-                if (pos.equals(lvl)) {
-                    motor.setPower(0);
-                    setPosition(LEVEL.LATCH);
-                    break;
-                }
-                break;
-            case TOP:
-                if(!pos.equals(lvl)) move(power, motor);
-
-                if (pos.equals(lvl)) {
-                    motor.setPower(0);
-                    setPosition(LEVEL.TOP);
-                    break;
-                }
-                break;
-        }
+    public boolean getMGL() {
+        return mgl.isTouched();
     }
-
-    //Moves our lift/ratchet up or down depending on the given power.
-    //TODO: Tracking needs testing.
-    public void move(double power, DcMotor motor) {
-        switch (pos) {
-            default:
-                motor.setPower(power);
-                break;
-
-            case GROUND:
-                //Don't move down if we are at the lowest level.
-                if (power > 0) {
-                    motor.setPower(power);
-                    if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
-                }
-
-                if (power == 0) motor.setPower(0);
-
-                //If we wish to move down from mid-level, make sure we aren't at the base.
-                if (power < 0 && !mgl.isTouched()) {
-                    motor.setPower(power);
-                }
-                break;
-
-            case LATCH:
-                if (power < 0 || 0 < power) {
-                    motor.setPower(power);
-                    if (mgl.isStateChange()) {
-                        if (power < 0) { pos = LEVEL.GROUND; }
-                        if (power > 0) { pos = LEVEL.TOP; }
-                    }
-                }
-
-                if (power == 0) motor.setPower(0);
-
-                break;
-
-            case TOP:
-                //Don't move up if we are at the highest level.
-                if (power < 0) {
-                    motor.setPower(power);
-                    if (mgl.isStateChange()) { pos = LEVEL.LATCH; }
-                }
-
-                if (power == 0) motor.setPower(0);
-
-                //If we wish to move up from mid-level, make sure we aren't at the base.
-                if (power > 0 && !mgl.isTouched()) {
-                    motor.setPower(power);
-                }
-                break;
-        }
-    }
-
-    //Stops the lift/ratchet.
-    public void stop() {
-       // liftMotor.setPower(0);
-    }
-
-    //Unlocks the ratchet sets it in a state that is ready to be moved. "stop" disallows movement.
-    public void unlockRatchet() {
-        ratchetServo.setPosition(.2);
-    }
-
-    //Locks the ratchet to prevent ratchet movement.
-    public void lockRatchet() { ratchetServo.setPosition(.5); }
-
-    //For testing when faulty hardware effects the servo positions.
-    public void setRatchetLock(double pos) { ratchetServo.setPosition(pos); }
 
     //Sets the position of our lift.
-    public void setPosition(LEVEL position) {
-        pos = position;
-    }
+    public void setPosition(LEVEL position) { pos = position; }
 
     //Returns the position of our lift.
     public String getPosition() {
         return pos.name();
     }
 
-    //Moves the hook to a position which we can hook.
-    //public void hook() { hook.setPosition(.25); }
+    //Resets the lift encoders.
+    public void resetLiftPosition() {
+        liftEnc = 0;
+        liftMotorR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotorL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
 
-    //Moves the hook to a position which we can unhook.
-    //public void unhook() { hook.setPosition(0.05); }
+    //Resets the pivot encoders.
+    public void resetPivotPosition() {
+        pivotEnc = 0;
+        pivotMotorR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivotMotorL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
 
-    //Returns the Lift motor.
-    //public DcMotor LiftMotor() {
-    //    return liftMotor;
-    //}
+    //Returns the pivot encoder position.
+    public int getPivotPosition() {
+        double total = 0;
+        total += pivotMotorR.getCurrentPosition();
+        total += pivotMotorL.getCurrentPosition();
+        return (int) (total / 2.0);
+    }
 
+    //Returns the lift encoder position.
+    public int getLiftPosition() {
+        double total = 0;
+        total += liftMotorR.getCurrentPosition();
+        total += liftMotorL.getCurrentPosition();
+        return (int) (total / 2.0);
+    }
+
+    //Stops the lift.
+    public void stop() {
+        PoT.reset();
+        liftMotorR.setPower(0);
+        liftMotorL.setPower(0);
+    }
+
+    //Moves the lift up or down depending on the given power.
+    public void moveLift(double input) {
+        //Going up
+        if (input < 0) {
+            liftMotorR.setPower(input);
+            liftMotorL.setPower(-input);
+        } //Slow down going down.
+        else if (input > 0 ) {
+            liftMotorR.setPower(input * .5);
+            liftMotorL.setPower(-input * .5);
+        }
+
+    }
+
+    //Moves the lift up or down depending on an amount of encoders.
+    public double moveLiftEnc(int enc) {
+        liftEnc = getLiftPosition();
+
+        if (setEnc(enc) || liftEnc <= 0) {
+            //Insert PID HERE
+            //Using the error to calculate our power.
+            double power = Math.abs(liftEnc - enc) / 4000;
+            if (power < .1) power = .1;
+
+            if (liftEnc < enc) return power;
+            if (liftEnc > enc) return -power;
+        }
+        return 0;
+    }
+
+    //Returns whether our encoder is not in the desired position. Useful for loops.
+    public boolean setEnc(double pos) {
+        return Math.abs(liftEnc - pos) > encTolerance;
+    }
+
+    //R - L + goes up
+    public double td =0;
+    public double tp = 0;
+    public void pivot(double input) {
+        if (mgl.isStateChange()) {
+            td = PoT.seconds();
+            pivotMotorR.setPower(0);
+            pivotMotorL.setPower(0);
+            setPosition(LEVEL.DEPOSIT);
+        }
+
+        double t = PoT.milliseconds()/1000;
+        double pow = -.585 * Math.pow(t, 3) + .65 * Math.pow(t, 2) -.25 * t + .6;
+        tp = pow;
+
+        if (!mgl.isTouched() && pow > 0) {
+        pivotMotorR.setPower(-pow);
+        pivotMotorL.setPower(pow);
+        if (pow < .1) pow = .1;
+        }
+    }
 }

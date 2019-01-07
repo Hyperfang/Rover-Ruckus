@@ -11,7 +11,6 @@ public class MGL {
 
     private DigitalChannel MGL;
     private boolean changeLock;
-    public boolean hasStateChanged = false; //Testing Variable
 
     //Initializes our Magnetic Limit Switch.
     public MGL(OpMode opMode) {
@@ -34,10 +33,8 @@ public class MGL {
         //If our change lock is unlocked and we are touching, then we have moved from false to true.
         if (!changeLock && isTouched()) {
             changeLock = true;
-            hasStateChanged = true;
             return true;
         }
-
         return false;
     }
 

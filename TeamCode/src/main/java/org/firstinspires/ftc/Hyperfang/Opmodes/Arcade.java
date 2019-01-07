@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Robot.Controls;
+import org.firstinspires.ftc.Hyperfang.Robot.Lift;
 
 import java.util.Arrays;
 
@@ -29,7 +30,7 @@ public class Arcade extends OpMode {
     public void init_loop() {}
 
     @Override
-    public void start() {}
+    public void start() {Lift.getInstance().stop();}
 
     /**Below is the controls and which drivers the correspond to. Here are the current controls
      * being used on the Gamepads.
@@ -57,9 +58,9 @@ public class Arcade extends OpMode {
         Controls.getInstance().setDirectionButton(gamepad1.left_bumper);
         Controls.getInstance().setSpeedButtons(gamepad1.right_bumper, gamepad1.y);
 
-        //Driver 2 controls Manipulation: Vertical Lift, Horizontal Lift,
-        //controls.moveVLift(-gamepad2.left_stick_y);
-        //controls.moveHLift(-gamepad2.right_stick_y);
+        //Driver 2 controls Manipulation: Pivot and Lift
+        Controls.getInstance().pivotLift(gamepad2.right_stick_y);
+        //Controls.getInstance().moveLift(gamepad2.right_stick_y);
 
         //Intake, Intake Position, Transfer
         //controls.intakePosition(gamepad2.left_bumper, intakePosDelay);
@@ -73,6 +74,9 @@ public class Arcade extends OpMode {
         //controls.ratchetLock(gamepad2.a);
 
         // Show the elapsed game time and wheel power.
+        telemetry.addData("Final Power", Lift.getInstance().tp);
+        telemetry.addData("Time Done", Lift.getInstance().td);
+        telemetry.addData("MGL", Lift.getInstance().getMGL());
         telemetry.addData("Half Mode: ", Controls.getInstance().getSpeedToggle());
         telemetry.addData("Reverse Mode: ", Controls.getInstance().getDirectionToggle());
         telemetry.addData("Status", "Run Time: " + runtime.toString());
