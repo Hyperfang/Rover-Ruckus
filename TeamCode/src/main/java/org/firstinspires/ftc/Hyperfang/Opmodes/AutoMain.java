@@ -1,8 +1,9 @@
 package org.firstinspires.ftc.Hyperfang.Opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Base;
@@ -11,7 +12,8 @@ import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
 import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
 
-@Autonomous(name = "Main", group = "Iterative Opmode")
+@Autonomous(name = "Main Recover", group = "Iterative Opmode")
+
 public class AutoMain extends OpMode {
 
     //List of system states.
@@ -19,6 +21,7 @@ public class AutoMain extends OpMode {
         INITIAL,
         LAND,
         FINDMIN,
+        PIVOT,
         FACEMIN,
         SAMPLE,
         RESET,
@@ -28,15 +31,13 @@ public class AutoMain extends OpMode {
         DEPOSITMIN,
         PICKUPMIN,
         PARK,
-        BACKUP
+        BACKUP,
+        TEST
     }
 
     //Instantiating the robot objects.
-    private Lift mLift;
     private Vuforia mVF;
     private Tensorflow mTF;
-    private Base mBase;
-    private Manipulator mManip;
 
     //Variables which pertain to the robot movement.
     private boolean[] robotPath = new boolean[]{true, false, false, false};
@@ -81,22 +82,23 @@ public class AutoMain extends OpMode {
         mStateTime.reset();
 
         //Instantiating our robot objects.
-        //mBase = new Base(this);
-       // mLift = new Lift(this);
-        mVF = new Vuforia();
+        Base.getInstance(this).ftcEnc();
+        Lift.getInstance(this).ftcEnc();
+        Manipulator.getInstance(this);
+        mVF = new Vuforia(this);
         mTF = new Tensorflow(this, mVF.getLocalizer());
-        mManip = new Manipulator(this);
 
         pos = Tensorflow.Position.UNKNOWN;
         vuMark = "";
 
         //Must change once we add Latching.
-        //mLift.setPosition(Lift.LEVEL.GROUND);
-        mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
+        //Base.getInstance().setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        //Locking the deposit and making sure that the intake is up.
-        mManip.lockDeposit();
-        //mManip.depositPosition();
+        //Lock the lift and set the lift position.
+        Lift.getInstance().lock();
+
+        //TODO; change when add pivot
+        Lift.getInstance().setPosition(Lift.LEVEL.COLLECT);
         initTime = mStateTime.milliseconds();
     }
 
@@ -114,7 +116,7 @@ public class AutoMain extends OpMode {
         mRunTime.reset();
 
         //Change to when we hit ground in future.
-        mBase.initIMU(this);
+        Base.getInstance().initIMU(this);
 
         //Activating vision.
         mVF.activate();
@@ -123,7 +125,7 @@ public class AutoMain extends OpMode {
         //Clearing our telemetry dashboard.
         telemetry.clear();
         wait.reset();
-        setState(State.FINDMIN);
+        setState(State.LAND);
     }
 
     //Loop: Loops once driver hits play after start() runs.
@@ -132,27 +134,47 @@ public class AutoMain extends OpMode {
         //Sending our current state and state run time to our driver station.
         telemetry.addData("Runtime: ", mRunTime.seconds());
         telemetry.addData(mState.toString(), mStateTime.seconds());
-        telemetry.addData("Position: ", mTF.getPos());
-        telemetry.addData("VuMark: ", vuMark);
-        telemetry.addData("IMU", mBase.getHeading());
-        telemetry.addData("Range", mBase.getRange());
-        telemetry.addData("Encoders", mBase.getEncoderPosition());
+        //telemetry.addData("Position: ", mTF.getPos());
+        //telemetry.addData("VuMark: ", vuMark);
+        telemetry.addData("MGL", Lift.getInstance().getMGL());
+        telemetry.addData("IMU", Base.getInstance().getHeading());
+        telemetry.addData("Range", Base.getInstance().getRange());
+        telemetry.addData("Encoders", Base.getInstance().getEncoderPosition());
 
         switch (mState) {
+            //Landing the robot on the ground.
+            case LAND:
+                /*
+                if (Lift.getInstance().setEnc()) {
+                    Lift.getInstance().moveLiftEnc(, )
+                }*/
+
+                //move lift down,
+                //unlock
+                //once that is done, pivot out
+                //Lift up, move forward SLOWLY NERD
+                //lift down, pivot down
+
+               /* if (Lift.getInstance().getPosition().equals(Lift.LEVEL.COLLECT)) {
+                    Lift.getInstance().pivotUp();
+                } else if (Lift.getInstance().getPosition().equals(Lift.LEVEL.DEPOSIT)) {
+                    Base.getInstance().initIMU(this);
+                    wait.reset();
+                    setState(State.FINDMIN);
+                }
+                */
+               setState(State.TEST);
+
             //Log the position of the mineral.
             case FINDMIN:
-                //Lower our lift to the ground level.
-                if (mLift.getPosition().equals("GROUND")) {
-                    //mLift.stop();
-
                     //Locate the gold.
-                    if (pos.equals(Tensorflow.Position.UNKNOWN) && wait.milliseconds() < 3500) {
-                        mTF.sample();
-                        pos = mTF.getPos();
-                    } else {
-                        mTF.deactivate();
-                        setState(State.FACEMIN);
-                    }
+                if (pos.equals(Tensorflow.Position.UNKNOWN) && wait.milliseconds() < 3000) {
+                    mTF.sample();
+                    pos = mTF.getPos();
+                } else {
+                    mTF.deactivate();
+                    wait.reset();
+                    setState(State.FACEMIN);
                 }
                 break;
 
@@ -164,31 +186,30 @@ public class AutoMain extends OpMode {
                 switch (pos) {
                     case UNKNOWN:
                     case CENTER:
-                        sampleEnc = 1700;
+                        sampleEnc = 2400;
                         sampleTurn = 0;
                         logTurn = 43;
                         break;
 
                     case LEFT:
-                        sampleEnc = 2000;
+                        sampleEnc = 3250;
                         sampleTurn = 25;
                         logTurn = 43;
                         break;
 
                     case RIGHT:
-                        sampleEnc = 2200;
+                        sampleEnc = 3250;
                         sampleTurn = -25;
                         logTurn = 52;
                         break;
                 }
 
                 //Turn if the cube is on the right or left.
-                if (sampleTurn != 0 && mBase.setTurn(sampleTurn))
-                    mBase.move(0, mBase.turnAbsolute(sampleTurn));
+                if (sampleTurn != 0 && Base.getInstance().setTurn(sampleTurn))
+                    Base.getInstance().move(0, Base.getInstance().turnAbsolute(sampleTurn));
                 else robotPath[1] = true;
 
                 if (robotPath[1]) {
-                    //mManip.resetEncoders();
                     wait.reset();
                     setState(State.SAMPLE);
                 }
@@ -196,46 +217,26 @@ public class AutoMain extends OpMode {
 
             //Sample (reposition) the Cube by extending the intake, and intaking.
             case SAMPLE:
-                /*//TODO: Add in Manipulator (Waiting on Hardware).
-                if (manipPath[0] && !mManip.isActionComplete) {
-                    mManip.moveLift(.5, 1000);
-                } else if (manipPath[0]) {
-                    mManip.resetEncoderMove();
-                    mManip.intakePosition();
-                    manipPath[0] = false;
-                    manipPath[1] = true;
-                    wait.reset();
-                } else if (wait.milliseconds() < 1000) {
-                    mManip.setIntake(1);
-                } else if (manipPath[1] && !mManip.isActionComplete){
-                    mManip.setIntake(0);
-                    mManip.depositPosition();
-                    mManip.moveLift(-.5, 0);
+                if (Lift.getInstance().setEnc(sampleEnc)) {
+                    Lift.getInstance().moveLiftEnc(sampleEnc, .4);
                 } else {
-                    setState(State.RESET);
-                }
-                break;
-*/
-                if (wait.milliseconds() < sampleEnc) {
-                    mBase.move(.25, 0);
-                } else if (wait.milliseconds() < sampleEnc + 2000) {
-                    mBase.move(-.25, 0);
-                } else {
-                    mBase.stop();
-                    setState(State.RESET);
+                    Base.getInstance().stop();
+                    Lift.getInstance().stop();
+                    setState(State.TEST);
                 }
                 break;
 
             //Reset to the starting position, then begin to log the navigation target.
             case RESET:
-                if (mBase.setTurn(0) && robotPath[1]) mBase.move(0, mBase.turnAbsolute(0));
+                if (Base.getInstance().setTurn(0) && robotPath[1]) Base.getInstance().move(0, Base.getInstance().turnAbsolute(0));
                 else {
                     robotPath[1] = false;
-                    if (mBase.setTurn(logTurn)) mBase.move(0, mBase.turnAbsolute(logTurn));
+                    if (Base.getInstance().setTurn(logTurn)) Base.getInstance().move(0, Base.getInstance().turnAbsolute(logTurn));
                     else {
                         robotPath[1] = true;
-                        mBase.stop();
-                        mBase.resetEncoders();
+                        Base.getInstance().stop();
+                        //Base.getInstance().resetEncoders();
+                        wait.reset();
                         setState(State.LOGNAV);
                     }
                 }
@@ -246,14 +247,15 @@ public class AutoMain extends OpMode {
                 if (!mVF.isVisible()) mVF.getVuMark();
                 else vuMark = mVF.getVuMarkName();
 
-                if (mBase.setEnc(22.5)) mBase.move(mBase.encoderMove(22.5), 0);
+                if (wait.milliseconds() < 2000) Base.getInstance().move(-.5, 0);
+                //if (Base.getInstance().setEnc(22.5)) Base.getInstance().move(Base.getInstance().encoderMove(22.5), 0);
                 else {
-                    mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
-                    mBase.stop();
+                    //Base.getInstance().setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
+                    Base.getInstance().stop();
                     wait.reset();
 
                     if (mVF.isVisible()) setState(State.NAVDEPOT);
-                    else setState(State.BACKUP);
+                    else setState(State.NAVDEPOT);
                 }
                 break;
 
@@ -261,40 +263,43 @@ public class AutoMain extends OpMode {
             case NAVDEPOT:
                 //Finding the target associated with the Crater Red and Crater Blue.
                 if (vuMark.equals("Blue-Rover") || vuMark.equals("Red-Footprint")) {
-                    craterDir = -45;
-                    parkTurn = -.1;
-                } else {
-                    craterDir = 135;
+                    craterDir = -44;
+                     parkTurn = -.1;
+                    } else {
+                    craterDir = 137;
                     parkTurn = .1;
-                }
+                    }
 
                 //Turn towards the crater.
-                if (mBase.setTurn(craterDir) && robotPath[1]) {
-                    mBase.move(0, mBase.turnAbsolute(craterDir));
+                if (Base.getInstance().setTurn(craterDir) && robotPath[1]) {
+                    Base.getInstance().move(0, Base.getInstance().turnAbsolute(craterDir));
                 } else {
                     robotPath[1] = false;
                     robotPath[2] = true;
                 }
 
                 //Move to the depot.
-                if (mBase.setRange(22) && robotPath[2]) {
-                    mBase.move(mBase.rangeMove(22), 0);
+                if (Base.getInstance().setRange(22) && robotPath[2]) {
+                    Base.getInstance().move(Base.getInstance().rangeMove(22), 0);
                 } else if (!robotPath[1]) {
-                    mBase.stop();
+                    Base.getInstance().stop();
                     setState(State.DEPOTMARKER);
                 }
                 break;
 
             //Depositing the cube and team marker using the manipulator.
             case DEPOTMARKER:
-                mBase.resetEncoders();
-                mManip.unlockDeposit();
-                wait.reset();
-                setState(State.DEPOSITMIN);
+                //Base.getInstance().resetEncoders();
+                if (Lift.getInstance().getPosition().equals(Lift.LEVEL.COLLECT)) {
+                Lift.getInstance().pivotUp();
+                Manipulator.getInstance().openBoth();
+                } else if (Lift.getInstance().getPosition().equals(Lift.LEVEL.DEPOSIT)) {
+                    wait.reset();
+                    setState(State.TEST);
+                }
                 break;
 
             case DEPOSITMIN:
-                mBase.stop();
                 setState(State.PICKUPMIN);
 
                 //Park when there is 7.5 seconds left.
@@ -306,7 +311,7 @@ public class AutoMain extends OpMode {
                 break;
 
             case PICKUPMIN:
-                mBase.stop();
+                Base.getInstance().stop();
                 setState(State.DEPOSITMIN);
 
                 //Park when there is 7.5 seconds left.
@@ -320,7 +325,7 @@ public class AutoMain extends OpMode {
             //Parking into the crater.
             case PARK:
                 //Move to the crater from the current position.
-                if (mBase.setEnc(31) && !robotPath[3]) mBase.move(mBase.encoderMove(31), parkTurn);
+                if (wait.milliseconds() < 2500 && !robotPath[3]) Base.getInstance().move(-.5, 0);
                 else {
                     if (!robotPath[3]) {
                         //mBase.setModeEncoder(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -329,10 +334,10 @@ public class AutoMain extends OpMode {
                     robotPath[3] = true;
                     //Make sure we are over the crater.
                     //In the future we will extend the manip. mManip.intakePosition();
-                    if (wait.milliseconds() < 400) mBase.move(.5, 0);
+                    if (wait.milliseconds() < 400) Base.getInstance().move(-.5, 0);
                     else {
                         telemetry.addLine("Finished Parking.");
-                        mBase.stop();
+                        Base.getInstance().stop();
                     }
                 }
                 break;
@@ -343,20 +348,28 @@ public class AutoMain extends OpMode {
                     telemetry.addLine("VuMark not found. Finding VuMark...");
                     mVF.getVuMark();
 
-                    if (wait.milliseconds() < 750) mBase.move(0, -.1);
-                    else if (wait.milliseconds() < 1500) mBase.stop();
+                    if (wait.milliseconds() < 750) Base.getInstance().move(0, -.1);
+                    else if (wait.milliseconds() < 1500) Base.getInstance().stop();
                     else wait.reset();
                 } else {
                     vuMark = mVF.getVuMarkName();
-                    mBase.stop();
+                    Base.getInstance().stop();
                     setState(State.NAVDEPOT);
                 }
                 break;
+            case TEST:
+                //Base.getInstance().stop();
+                //Lift.getInstance().pivotDown();
+                //setState(State.DEPOSITMIN);
+                break;
         }
+
+
     }
 
     //Stop: Runs once driver hits stop.
     @Override
     public void stop() {
+        Base.getInstance().destroyIMU();
     }
 }

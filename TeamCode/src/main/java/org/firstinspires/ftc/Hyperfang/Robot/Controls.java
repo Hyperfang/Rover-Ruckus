@@ -8,8 +8,6 @@ public class Controls {
     private static Controls obj;
     private static OpMode mOpMode;
 
-    private Manipulator manip;
-
     //Speed Variables
     private double linear;
     private double turn;
@@ -22,19 +20,19 @@ public class Controls {
     //Toggle Timers.
     private ElapsedTime slowDelay = new ElapsedTime();
     private ElapsedTime revDelay = new ElapsedTime();
-    private ElapsedTime intakePosDelay = new ElapsedTime();
-    private ElapsedTime trapDelay = new ElapsedTime();
+    private ElapsedTime pivotDelay = new ElapsedTime();
     private ElapsedTime depDelay = new ElapsedTime();
     private ElapsedTime hookDelay = new ElapsedTime();
     private ElapsedTime testTime = new ElapsedTime();
+    private ElapsedTime antiDelay = new ElapsedTime();
 
     //Toggle Booleans
     private boolean revMode;
     private boolean slowMode;
-    private boolean isIntakePosition;
+    private boolean isPivot;
     private boolean isHook;
-    private boolean isTrap;
     private boolean isDeposit;
+    private boolean antiMode;
 
     private double pos = 0;
 
@@ -57,9 +55,9 @@ public class Controls {
     //Initializes the controls object.
     private Controls(OpMode opMode) {
         mOpMode = opMode;
-        Base.getInstance(opMode);
+        Base.getInstance(mOpMode);
         Lift.getInstance(opMode);
-       // manip = new Manipulator(opMode);
+        Manipulator.getInstance(opMode);
 
         mOpMode.gamepad1.setJoystickDeadzone(.075f);
         mOpMode.gamepad2.setJoystickDeadzone(.075f);
@@ -70,24 +68,23 @@ public class Controls {
 
         revMode = false;
         revButton = false;
+        antiMode = true;
 
-        isTrap = true;
-        isDeposit = false;
-        isIntakePosition = false;
+        isDeposit = true;
+        isPivot = false;
         isHook = false;
     }
 
-    //Initializes the robot.
+    //Initializes the robot movement.
     public void initRobot() {
-        //manip.depositPosition();
-        //manip.lockDeposit();
-        //lift.setPosition(Lift.LEVEL.GROUND);
+        Base.getInstance(mOpMode).ftcEnc();
+        Lift.getInstance(mOpMode).ftcEnc();
     }
 
     //Drive Method
     //Arcade Mode uses left stick to go forward, and right stick to turn.
     public void moveArcade() {
-        linear = -mOpMode.gamepad1.left_stick_y;
+        linear = mOpMode.gamepad1.left_stick_y;
         turn = mOpMode.gamepad1.right_stick_x;
         toggleSpeed(slowButton, resetButton);
         toggleDirection(revButton);
@@ -98,8 +95,8 @@ public class Controls {
     //Tank Mode uses one stick to control each wheel.
     public void moveTank() {
         //In this case, linear refers to the left side, and turn to the right.
-        linear = -mOpMode.gamepad1.left_stick_y;
-        turn = -mOpMode.gamepad1.right_stick_y;
+        linear = mOpMode.gamepad1.left_stick_y;
+        turn = mOpMode.gamepad1.right_stick_y;
         toggleSpeed(slowButton, resetButton);
         toggleDirection(revButton);
         Base.getInstance().setPower(linear, turn);
@@ -168,99 +165,93 @@ public class Controls {
         revButton = toggle;
     }
 
-    //Pivots the Lift.
-    public void pivotLift(double gamepad) {
-        Lift.getInstance().pivot(gamepad);
+    //Pivots the Lift via macro.
+    public void macroPivot(boolean toggle) {
+        if (isPivot) Lift.getInstance().pivotUp();
+        else Lift.getInstance().pivotDown();
+
+        //Allows time for button release.
+        if (pivotDelay.milliseconds() > 600) {
+            //Toggle is the pivot toggle button.
+            if (toggle && isPivot) {
+                isPivot = false;
+                pivotDelay.reset();
+            } //Setting to locked mode.
+            else if (toggle) {
+                isPivot = true;
+                pivotDelay.reset();
+            }
+        }
+    }
+
+    //Pivots the Lift via manual input.
+    public void manualPivot(double gamepad) {
+        Lift.getInstance().manualPivot(-gamepad, antiMode);
+    }
+
+    //Identifies the buttons we are tracking to control our anti-gravity mode toggle.
+    public void toggleAntiGravity(boolean toggle) {
+        //Allows time for button release.
+        if (antiDelay.milliseconds() > 250) {
+            //Toggle is the anti-gravity toggle button.
+            if (toggle && antiMode) {
+                antiMode = false;
+                antiDelay.reset();
+            } //Setting to locked mode.
+            else if (toggle) {
+                antiMode = true;
+                antiDelay.reset();
+            }
+        }
     }
 
     //Moves the Lift.
     public void moveLift(double gamepad) {
-        Lift.getInstance().moveLift(gamepad);
+        Lift.getInstance().moveLift(gamepad, antiMode);
     }
 
     //Runs the intake to collect or release minerals.
-    public void intake(double gamepad, double gamepad2) {
-        if (0 < Math.abs(gamepad))  { manip.setIntake(1); }
-        else if (0 < Math.abs(gamepad2)) { manip.setIntake(-1); }
-        else { manip.setIntake(0); }
+    public void intake(boolean gamepad, boolean gamepad2) {
+        if (gamepad) {Manipulator.getInstance().intake(.7);}
+        else if (gamepad2) {Manipulator.getInstance().intake(-.7);}
+        else {Manipulator.getInstance().intake(0);}
     }
 
-    //Moves the intake to a certain position.
-    public void intakePosition(boolean toggle) {
-        if (manip.incIntakePosition) { manip.intakePosition(); }
-
-        //Allows time for button release.
-        else if (intakePosDelay.milliseconds() > 300 && !manip.incIntakePosition) {
-            //Toggle is the toggle button.
-            if (toggle && isIntakePosition) {
-                isIntakePosition = false;
-                manip.depositPosition();
-                intakePosDelay.reset();
-            } //Setting to intake mode.
-            else if (toggle) {
-                isIntakePosition = true;
-                manip.incIntakePosition = true;
-                intakePosDelay.reset();
-            }
-        }
-    }
-
-    //Sets the position of the trapdoor.
-    public void trapdoor(boolean toggle) {
-        //Allows time for button release.
-        if (trapDelay.milliseconds() > 250) {
-            //Toggle is the trapdoor toggle button.
-            if (toggle && isTrap) {
-                isTrap = false;
-                manip.holdMinerals();
-                trapDelay.reset();
-            } //Setting to locked mode.
-            else if (toggle) {
-                isTrap = true;
-                manip.releaseMinerals();
-                trapDelay.reset();
-            }
-        }
-    }
-
-    //Sets the position of the trapdoor.
+    //Sets the position of the deposit.
     public void deposit(boolean toggle) {
         //Allows time for button release.
         if (depDelay.milliseconds() > 250) {
-            //Toggle is the deposit toggle button.
-            if (toggle && !isDeposit) {
-                isDeposit = true;
-                manip.unlockDeposit();
+            //Toggle is the trapdoor toggle button.
+            if (toggle && isDeposit) {
+                isDeposit = false;
+                Manipulator.getInstance().closeBoth();
                 depDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
-                isDeposit = false;
-                manip.lockDeposit();
+                isDeposit = true;
+                Manipulator.getInstance().openBoth();
                 depDelay.reset();
             }
         }
     }
 
-
-/*
-    //Locks or Unlocks the ratchet based on the state it is in.
-    public void hook(boolean toggle) {
+    //Locks or Unlocks the lift to the base.
+    public void lock(boolean toggle) {
         //Allows time for button release.
         if (hookDelay.milliseconds() > 500) {
             //Toggle is the hook toggle button.
             if (toggle && isHook) {
                 isHook = false;
-                lift.hook();
+                Lift.getInstance().lock();
                 hookDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
                 isHook = true;
-                lift.unhook();
+                Lift.getInstance().unlock();
                 hookDelay.reset();
             }
         }
     }
-    */
 
     //Returns our drive variables.
     public boolean getSpeedToggle() {
@@ -272,6 +263,11 @@ public class Controls {
         return revMode;
     }
 
+    //Returns the lift variables.
+    public boolean getGravityToggle() {
+        return antiMode;
+    }
+
     //Returns our drive variables.
     public double[] getDriveValue() {
         return new double[]{linear, turn};
@@ -279,7 +275,7 @@ public class Controls {
 
     //Returns the current position of the lift.
    public String getLevel() {
-        return Lift.getInstance().getPosition();
+        return Lift.getInstance().getPosition().name();
     }
 
     //Provides a method of easily testing servos where x and y can be substituted for gamepad inputs.

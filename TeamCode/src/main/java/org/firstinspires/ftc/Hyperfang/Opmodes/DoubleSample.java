@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.Hyperfang.Opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
 
 @Autonomous(name = "Double Sample", group = "Iterative Opmode")
+@Disabled
 public class DoubleSample extends OpMode {
 
     //List of system states.
@@ -91,7 +93,7 @@ public class DoubleSample extends OpMode {
         //mLift = new Lift(this);
         mVF = new Vuforia();
         mTF = new Tensorflow(this, mVF.getLocalizer());
-        mManip = new Manipulator(this);
+       // mManip = new Manipulator(this);
 
         pos = Tensorflow.Position.UNKNOWN;
         vuMark = "";
@@ -102,7 +104,7 @@ public class DoubleSample extends OpMode {
 
 
         //Locking the deposit and making sure that the intake is up.
-        mManip.lockDeposit();
+        //mManip.lockDeposit();
         //mManip.depositPosition();
         initTime = mStateTime.milliseconds();
     }
@@ -324,7 +326,7 @@ public class DoubleSample extends OpMode {
 
             //Depositing the cube and team marker using the manipulator.
             case DEPOTMARKER:
-                mManip.unlockDeposit();
+               //mManip.unlockDeposit();
 
                 //Turn towards the crater.
                 if (mBase.setTurn(samplePosition)) {

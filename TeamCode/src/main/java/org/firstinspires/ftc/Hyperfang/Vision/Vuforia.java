@@ -76,6 +76,7 @@ public class Vuforia {
     private List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
 
     //Camera Choice
+    private WebcamName webcam;
     private VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
 
     //Variables which log vuMark information.
@@ -85,8 +86,7 @@ public class Vuforia {
     private VectorF trans;
     private Orientation rot;
 
-    private WebcamName webcam;
-    //Initializes our vuforia object without a camera monitor.
+    //Initializes our vuforia object through the phone without a camera monitor.
     public Vuforia() {
         parameters = new VuforiaLocalizer.Parameters();
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
@@ -98,9 +98,23 @@ public class Vuforia {
         initTrack();
     }
 
-    //Initializes our vuforia object with a camera monitor.
+    //Initializes our vuforia object through the webcam without a camera monitor.
     public Vuforia(OpMode opMode) {
         webcam = opMode.hardwareMap.get(WebcamName.class, "UVC");
+        parameters = new VuforiaLocalizer.Parameters();
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+        parameters.cameraName = webcam;
+        parameters.useExtendedTracking = false;
+
+        //Instantiate the Vuforia engine
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        initTrack();
+    }
+
+    //Initializes our vuforia object through a webcam with a camera monitor.
+    public Vuforia(OpMode opMode, String deviceName) {
+        webcam = opMode.hardwareMap.get(WebcamName.class, "camera");
         int cameraMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
