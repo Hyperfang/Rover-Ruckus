@@ -10,19 +10,18 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 */
 
 public class Manipulator {
-    //singleton objects
+
+    //Singleton objects
     private static Manipulator obj;
     private OpMode mOpMode;
 
-    //vex motor objects
+    //Servo Objects
     private CRServo leftIntakeMotor;
     private CRServo rightIntakeMotor;
-
-    //servo objects
     private Servo leftDeposit;
     private Servo rightDeposit;
 
-    //Elapsed time for automating motions
+    //Elapsed time for automating movements.
     private ElapsedTime eTime = new ElapsedTime();
 
     //Initializes the manipulator object.
@@ -41,59 +40,62 @@ public class Manipulator {
         return obj;
     }
 
-    //Constructor for the base object
+    //Constructor for the base object.
     private Manipulator(OpMode opMode) {
         mOpMode = opMode;
         leftIntakeMotor = mOpMode.hardwareMap.get(CRServo.class, "lMotor");
         rightIntakeMotor = mOpMode.hardwareMap.get(CRServo.class, "rMotor");
         leftDeposit = mOpMode.hardwareMap.get(Servo.class, "lDeposit");
         rightDeposit = mOpMode.hardwareMap.get(Servo.class, "rDeposit");
+        mOpMode.telemetry.addLine("Manipulator Version 2 Initialized");
     }
 
-    //Set vex motors to given power
+    //Give power to the vex motors.
     public void setMotors(double pow) {
-        leftIntakeMotor.setPower(pow);
-        rightIntakeMotor.setPower(-pow);
+        leftIntakeMotor.setPower(-pow);
+        rightIntakeMotor.setPower(pow);
     }
 
-    //Set motors for a given duration to intake
+    //Set motors for a given duration to intake.
     public void intake(double pow) {
         setMotors(pow);
     }
 
-    //Stop both motors
+    //Stop both motors.
     public void stopMotor() {
         leftIntakeMotor.setPower(0);
         rightIntakeMotor.setPower(0);
     }
 
-    //Open gold servo
+    //Open gold servo.
     public void openGold() { leftDeposit.setPosition(.65); }
 
-    //Close gold servo
+    //Close gold servo.
     public void closeGold() {
         leftDeposit.setPosition(.13);
     }
 
-    //Open silver servo
+    //Open silver servo.
     public void openSilver() { rightDeposit.setPosition(0); }
 
-    //Close silver servo
+    //Close silver servo.
     public void closeSilver() {
         rightDeposit.setPosition(.4);
     }
 
+    //Close both the silver and gold deposit.
     public void closeBoth() {
         closeGold();
         closeSilver();
     }
 
+    //Open both the silver and gold deposit.
     public void openBoth() {
         openGold();
         openSilver();
     }
 
-    //A macro for gold depositing
+    //A macro for gold depositing.
     public void depositGold(long msDelay) {
         openGold();
         if (eTime.milliseconds() > msDelay) {
@@ -102,7 +104,7 @@ public class Manipulator {
         }
     }
 
-    //A macro for silver depositing
+    //A macro for silver depositing.
     public void depositSilver(long msDelay) {
         openSilver();
         if (eTime.milliseconds() > msDelay) {
@@ -111,7 +113,7 @@ public class Manipulator {
         }
     }
 
-    //A macro for depositing both
+    //A macro for depositing both.
     public void depositBoth(long msDelay) {
         openSilver();
         openGold();

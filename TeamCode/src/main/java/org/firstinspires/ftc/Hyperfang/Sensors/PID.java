@@ -6,16 +6,18 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 Created by Caleb. Logic Assistance by Daniel.
  */
 public class PID {
+
+    //PID variables
     private double kP;
     private double kI;
     private double kD;
-
-    private ElapsedTime currTime = new ElapsedTime();
     private double kError;
     private double kRate;
     private double prevError;
     private double prevTime;
+    private ElapsedTime currTime = new ElapsedTime();
 
+    //Default Constructor
     public PID() {
         kP = 0;
         kI = 0;
@@ -27,6 +29,7 @@ public class PID {
         prevTime = 0;
     }
 
+    //Parameter Constructor: Sets the PID variables.
     public PID(double P, double I, double D) {
         kP = P;
         kI = I;
@@ -38,6 +41,7 @@ public class PID {
         prevTime = 0;
     }
 
+    //Sets the constants for the PID.
     public void setConstants(double P, double I, double D) {
         kP = P;
         kI = I;
@@ -52,5 +56,4 @@ public class PID {
         prevTime = currTime.milliseconds();
         return kP * error + kI * kError - Math.abs(kD * kRate);
     }
-
 }

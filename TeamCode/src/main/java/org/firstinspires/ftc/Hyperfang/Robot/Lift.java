@@ -4,11 +4,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.Hyperfang.Sensors.MGL;
 
 public class Lift {
+
+    //Lift Position States
     public enum LEVEL {
         COLLECT,
         DEPOSIT,
@@ -16,24 +16,20 @@ public class Lift {
 
     //Singleton object
     private static Lift obj;
-    private static OpMode mOpMode;
+    private OpMode mOpMode;
 
+    //Position Variables
     private LEVEL pos;
-    private static final double encTolerance = 25;
+    private static final double encTolerance = 30;
 
+    //Lift Objects
     private static DcMotor liftMotorR;
     private static DcMotor liftMotorL;
     private static DcMotorEx pivotMotorR;
     private static DcMotorEx pivotMotorL;
-
     private Servo hookR;
     private Servo hookL;
     private MGL mgl;
-
-    private ElapsedTime PoT = new ElapsedTime();
-
-    private int liftEnc;
-    private boolean isRetract;
 
     //Initializes the lift object.
     public static Lift getInstance() {
@@ -65,76 +61,70 @@ public class Lift {
         setPosition(LEVEL.COLLECT);
         resetLiftPosition();
         resetPivotPosition();
-        isRetract = false;
-        mOpMode.telemetry.addLine("Lift Version 1.4 Inited");
-    }
-
-    private void setModeEncoderPivot(DcMotorEx.RunMode mode) {
-        pivotMotorR.setMode(mode);
-        pivotMotorL.setMode(mode);
-    }
-
-    private void setModeEncoderLift(DcMotorEx.RunMode mode) {
-        liftMotorR.setMode(mode);
-        liftMotorL.setMode(mode);
+        mOpMode.telemetry.addLine("Lift Version 1.5 Inited");
     }
 
     //After testing the encoders we found out the FTC SDK clears encoder information (unlike motors)
     //in between OpModes. Due to this, this method must be called in init to set the encoders.
     public void ftcEnc() {
-        resetLiftPosition();
         liftMotorR.setDirection(DcMotor.Direction.REVERSE);
         pivotMotorL.setDirection(DcMotorEx.Direction.REVERSE);
         liftMotorL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotorR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         pivotMotorR.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         pivotMotorL.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        setModeEncoderLift(DcMotor.RunMode.RUN_TO_POSITION);
         setModeEncoderPivot(DcMotorEx.RunMode.RUN_TO_POSITION);
     }
 
     //Returns the state of the Magnetic Limit Switch.
-    public boolean getMGL() {
+    private boolean getMGL() {
         return mgl.isTouched();
     }
 
-    //Sets the position of our lift.
+    //Sets the position of our Lift.
     public void setPosition(LEVEL position) { pos = position; }
 
-    //Returns the position of our lift.
+    //Returns the position of our Lift.
     public LEVEL getPosition() {
         return pos;
     }
 
-    //Resets the lift encoders.
+    //Sets the modes of the Pivot.
+    private void setModeEncoderPivot(DcMotorEx.RunMode mode) {
+        pivotMotorR.setMode(mode);
+        pivotMotorL.setMode(mode);
+    }
+
+    //Sets the modes of the Lift.
+    public void setModeEncoderLift(DcMotorEx.RunMode mode) {
+        liftMotorR.setMode(mode);
+        liftMotorL.setMode(mode);
+    }
+
+    //Resets the Lift encoders.
     public void resetLiftPosition() {
-        liftEnc = 0;
         liftMotorR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotorL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         setModeEncoderLift(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    //Resets the pivot encoders.
+    //Resets the Pivot encoders.
     public void resetPivotPosition() {
         pivotMotorR.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         pivotMotorL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         setModeEncoderPivot(DcMotorEx.RunMode.RUN_USING_ENCODER);
     }
 
-    //Returns the lift encoder position.
+    //Returns the Lift encoder position.
     public int getLiftPosition() {
-       // double total = 0;
-       // total += liftMotorR.getCurrentPosition();
-       // total += liftMotorL.getCurrentPosition();
-        //return (int) (total / 2.0);
-        return liftMotorR.getCurrentPosition();
+        double total = 0;
+        total += liftMotorR.getCurrentPosition();
+        total += liftMotorL.getCurrentPosition();
+        return (int) (total / 2.0);
     }
 
-    //Returns the lift encoder position.
-    public int getLiftLeft() {
-        return liftMotorL.getCurrentPosition();
-    }
-
-    //Returns the pivot encoder position.
+    //Returns the Pivot encoder position.
     public int getPivotPosition() {
         double total = 0;
         total += pivotMotorR.getCurrentPosition();
@@ -144,24 +134,30 @@ public class Lift {
 
     //Sets a target position for the Lift encoders. (Counts)
     private void setTargetPositionLift(double pos) {
-        liftMotorL.setTargetPosition((int) pos);
+        liftMotorL.setTargetPosition((int)pos);
         liftMotorR.setTargetPosition((int)pos);
     }
 
     //Sets a target position for the Pivot encoders. (Counts)
-    private void setTargetPositionPivot(double pos) {
-        pivotMotorR.setTargetPosition((int) pos);
+    public void setTargetPositionPivot(double pos) {
+        pivotMotorR.setTargetPosition((int)pos);
         pivotMotorL.setTargetPosition((int)pos);
     }
 
-    private void movePivot(double pow) {
+    //Sets the Lift motors.
+    private void setLift(double pow) {
+        liftMotorR.setPower(pow);
+        liftMotorL.setPower(pow);
+    }
+
+    //Sets the Pivot motors.
+    public void setPivot(double pow) {
         pivotMotorR.setPower(pow);
         pivotMotorL.setPower(pow);
     }
 
     //Stops the lift.
     public void stop() {
-        PoT.reset();
         liftMotorR.setPower(0);
         liftMotorL.setPower(0);
     }
@@ -170,11 +166,9 @@ public class Lift {
     public void moveLift(double input, boolean antiGravity) {
         if (input != 0) {
             //If we are moving down activate anti-gravity countermeasures unless it is bypassed.
-            if (input > 0) {
+            if (input < 0) {
                 if (antiGravity) input *= .5;
-                isRetract = true;
-                pivotLift(isRetract);
-            } else isRetract = false;
+            }
             liftMotorR.setPower(input);
             liftMotorL.setPower(input);
         } else {
@@ -184,72 +178,61 @@ public class Lift {
     }
 
     //Moves the lift up or down depending on an amount of encoders.
-    public double moveLiftEnc(int enc, double power) {
-        setModeEncoderLift(DcMotor.RunMode.RUN_TO_POSITION);
-
+    public void moveLiftEnc(int enc, double power) {
+        setTargetPositionLift(enc);
         if (setEnc(enc)) {
-            setTargetPositionLift(enc);
-            return power;
+            setLift(power);
         } else {
-            liftMotorR.setPower(0);
-            liftMotorL.setPower(0);
-            setModeEncoderLift(DcMotor.RunMode.RUN_USING_ENCODER);
-
+            setLift(0);
         }
-        return 0;
     }
 
     //Returns whether our encoder is not in the desired position. Useful for loops.
     public boolean setEnc(double pos) {
-        return Math.abs(liftEnc - pos) > encTolerance;
+        return Math.abs(getLiftPosition() - pos) > encTolerance;
     }
 
     //Pivot the lift via an input.
     public void manualPivot(double input, boolean antiGravity) {
         if (antiGravity) input *= .5;
-        movePivot(input);
+        setPivot(input);
     }
 
     //Pivots the Lift Up.
     public void pivotUp() {
-        mOpMode.telemetry.addData("TARGET", pivotMotorL.getTargetPosition());
-        if (pivotMotorL.getCurrentPosition() < 1050) {
+        if (getPivotPosition() < 1050) {
             setTargetPositionPivot(1075);
-            movePivot(.5);
+            setPivot(.5);
         }
         //Activate the ZeroPowerBehavior Mode (BRAKE).
-        else if (pivotMotorL.getCurrentPosition() >= 1200) {
-            movePivot(0);
+        else if (getPivotPosition() >= 1190 || mgl.isTouched()) {
+            setPivot(0);
             setPosition(LEVEL.DEPOSIT);
         }
-        else if (pivotMotorL.getCurrentPosition() >= 1050) {
+        else if (getPivotPosition() >= 1050) {
             setTargetPositionPivot(1200);
-            movePivot(.3);
+            setPivot(.35);
         }
     }
 
-
-    //Pivots the Lift Up.
-    public void pivotLift(boolean active) {
-        if (pos.equals(LEVEL.COLLECT) && liftMotorL.getCurrentPosition() < 700 && active) {
-            if (pivotMotorL.getCurrentPosition() < 200 || 400 < pivotMotorL.getCurrentPosition()) {
-                setTargetPositionPivot(300);
-                movePivot(.25);
-            } else {
-                movePivot(0);
-            }
+    //Pivots the Lift to a specified position.
+    public void pivotLift(int target) {
+        if (getPivotPosition() == target) {
+           setPivot(0);
+        } else {
+            setTargetPositionPivot(target);
+            setPivot(.3);
         }
     }
 
     //Pivots the Lift Up.
     public void pivotDown() {
-        mOpMode.telemetry.addData("TARGET", pivotMotorL.getTargetPosition());
-        if (pivotMotorL.getCurrentPosition() > 825) {
+        if (getPivotPosition() > 825) {
             setTargetPositionPivot(400);
-            movePivot(.3);
+            setPivot(.3);
         } //Allow gravity to bring the lift the rest of the way down.
-        else if (pivotMotorL.getCurrentPosition() <= 450) {
-            movePivot(.0);
+        else if (getPivotPosition() <= 450) {
+            setPivot(.0);
             setPosition(LEVEL.COLLECT);
         }
     }

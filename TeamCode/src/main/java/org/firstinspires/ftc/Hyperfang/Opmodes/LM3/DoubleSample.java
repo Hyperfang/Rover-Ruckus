@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.Hyperfang.Opmodes;
+package org.firstinspires.ftc.Hyperfang.Opmodes.LM3;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -166,10 +166,10 @@ public class DoubleSample extends OpMode {
                 break;
 
             //TODO: Change sampleEnc to encoders, currently using wait time (Waiting on Hardware).
-            //Turn towards the cube.
+            //Camera towards the cube.
             case FACEMIN:
                 //Check the center cube if the position is center, or unknown.
-                //Or Turn Left or Right depending on the position of the cube.
+                //Or Camera Left or Right depending on the position of the cube.
                 switch (pos) {
                     case UNKNOWN:
                     case CENTER:
@@ -305,7 +305,7 @@ public class DoubleSample extends OpMode {
                     parkTurn = .1;
                 }
 
-                //Turn towards the crater.
+                //Camera towards the crater.
                 if (mBase.setTurn(craterDir) && robotPath[1]) {
                     mBase.move(0, mBase.turnAbsolute(craterDir));
                 } else {
@@ -328,7 +328,7 @@ public class DoubleSample extends OpMode {
             case DEPOTMARKER:
                //mManip.unlockDeposit();
 
-                //Turn towards the crater.
+                //Camera towards the crater.
                 if (mBase.setTurn(samplePosition)) {
                     mBase.move(0, mBase.turnAbsolute(samplePosition));
                 } else {

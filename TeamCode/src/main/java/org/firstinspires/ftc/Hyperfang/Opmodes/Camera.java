@@ -8,18 +8,16 @@ import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
 
-@Autonomous(name="Nerd", group="Iterative Opmode")
-public class Turn extends OpMode {
+@Autonomous(name="Camera", group="Iterative Opmode")
+public class Camera extends OpMode {
 
 //--------------------------------------------------------------------------------------------------
-    public Turn() {} //Default Constructor
+    public Camera() {} //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
     private ElapsedTime runtime;
     private Tensorflow tf;
     private Vuforia vuforia;
-
-    private ElapsedTime PoT = new ElapsedTime();
 
     //Initialization: Runs once driver presses init.
     @Override
@@ -30,8 +28,8 @@ public class Turn extends OpMode {
         Base.getInstance(this).ftcEnc();
         Base.getInstance(this).initIMU(this);
         //Lift.getInstance(this);
-        //vuforia = new Vuforia(this);
-        //tf = new Tensorflow(this, vuforia.getLocalizer());
+        vuforia = new Vuforia(this);
+        tf = new Tensorflow(this, vuforia.getLocalizer(), "id");
 
         //Indicates that initialization is complete.
         telemetry.addLine("Initialized in " + runtime.milliseconds() + "ms");
@@ -44,25 +42,24 @@ public class Turn extends OpMode {
     //Start: Runs once driver hits play.
     @Override
     public void start() {
-        PoT.reset();
+        vuforia.activate();
+        tf.activate();
     }
 
     //Loop: Loops once driver hits play after start() runs.
     @Override
     public void loop() {
-        if (Base.getInstance().setEnc(10)) Base.getInstance().move(Base.getInstance().encoderMove(10),0);
-        else Base.getInstance().stop();
-
+        vuforia.getVuMark();
+        tf.sample();
         telemetry.addData("IMU", Base.getInstance().getHeading());
-       // telemetry.addData("Cube: ", tf.getPos());
-        //telemetry.addData("Vuforia", vuforia.getVuMarkName());
-        //telemetry.addData("ENCODERS: ", Base.getInstance().getEncoderPosition());telemetry.addData("Vuforia: ", vuforia.isVisible());
+        telemetry.addData("Cube: ", tf.getPos());
+        telemetry.addData("Vuforia", vuforia.getVuMarkName());
     }
 
     //Stop: Runs once driver hits stop.
     @Override
     public void stop() {
         Base.getInstance().destroyIMU();
-        //tf.deactivate();
+        tf.deactivate();
     }
 }

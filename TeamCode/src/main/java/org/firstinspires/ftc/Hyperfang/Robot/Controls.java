@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.Hyperfang.Robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Controls {
     //Robot Object Instantiation
     private static Controls obj;
-    private static OpMode mOpMode;
+    private OpMode mOpMode;
 
     //Speed Variables
     private double linear;
@@ -21,10 +22,11 @@ public class Controls {
     private ElapsedTime slowDelay = new ElapsedTime();
     private ElapsedTime revDelay = new ElapsedTime();
     private ElapsedTime pivotDelay = new ElapsedTime();
+    private ElapsedTime antiDelay = new ElapsedTime();
     private ElapsedTime depDelay = new ElapsedTime();
     private ElapsedTime hookDelay = new ElapsedTime();
     private ElapsedTime testTime = new ElapsedTime();
-    private ElapsedTime antiDelay = new ElapsedTime();
+
 
     //Toggle Booleans
     private boolean revMode;
@@ -32,9 +34,12 @@ public class Controls {
     private boolean isPivot;
     private boolean isHook;
     private boolean isDeposit;
+    private boolean isAdjust;
     private boolean antiMode;
 
+    //Iterating Numbers
     private double pos = 0;
+    private int adjustPivot = 1200;
 
     //Initializes the Controls object.
     public static Controls getInstance() {
@@ -55,7 +60,7 @@ public class Controls {
     //Initializes the controls object.
     private Controls(OpMode opMode) {
         mOpMode = opMode;
-        Base.getInstance(mOpMode);
+        Base.getInstance(opMode);
         Lift.getInstance(opMode);
         Manipulator.getInstance(opMode);
 
@@ -72,20 +77,23 @@ public class Controls {
 
         isDeposit = true;
         isPivot = false;
+        isAdjust = false;
         isHook = false;
+        mOpMode.telemetry.addLine("Scorpion Controls Version 2 Loaded");
     }
 
     //Initializes the robot movement.
     public void initRobot() {
         Base.getInstance(mOpMode).ftcEnc();
         Lift.getInstance(mOpMode).ftcEnc();
+        Lift.getInstance().setModeEncoderLift(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     //Drive Method
     //Arcade Mode uses left stick to go forward, and right stick to turn.
     public void moveArcade() {
-        linear = mOpMode.gamepad1.left_stick_y;
-        turn = mOpMode.gamepad1.right_stick_x;
+        linear = -mOpMode.gamepad1.left_stick_y;
+        turn = -mOpMode.gamepad1.right_stick_x;
         toggleSpeed(slowButton, resetButton);
         toggleDirection(revButton);
         Base.getInstance().move(linear, turn);
@@ -95,8 +103,8 @@ public class Controls {
     //Tank Mode uses one stick to control each wheel.
     public void moveTank() {
         //In this case, linear refers to the left side, and turn to the right.
-        linear = mOpMode.gamepad1.left_stick_y;
-        turn = mOpMode.gamepad1.right_stick_y;
+        linear = -mOpMode.gamepad1.left_stick_y;
+        turn = -mOpMode.gamepad1.right_stick_y;
         toggleSpeed(slowButton, resetButton);
         toggleDirection(revButton);
         Base.getInstance().setPower(linear, turn);
@@ -166,27 +174,45 @@ public class Controls {
     }
 
     //Pivots the Lift via macro.
-    public void macroPivot(boolean toggle) {
-        if (isPivot) Lift.getInstance().pivotUp();
-        else Lift.getInstance().pivotDown();
+    public void macroPivot(boolean toggle, boolean upperLimit, boolean lowerLimit) {
+        if (isPivot && !isAdjust) Lift.getInstance().pivotUp();
+        else if (!isPivot && !isAdjust) Lift.getInstance().pivotDown();
+        else Lift.getInstance().pivotLift(adjustPivot);
+
+        //Detects the lift position while adjusting to determine the next toggle position.
+        if (isAdjust && Lift.getInstance().getPivotPosition() > 1000) isPivot = true;
+        else if (isAdjust && Lift.getInstance().getPivotPosition() < 1000) isPivot = false;
 
         //Allows time for button release.
         if (pivotDelay.milliseconds() > 600) {
             //Toggle is the pivot toggle button.
             if (toggle && isPivot) {
+                isAdjust = false;
                 isPivot = false;
                 pivotDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
+                isAdjust = false;
                 isPivot = true;
                 pivotDelay.reset();
             }
         }
+
+        if (upperLimit) {
+            isAdjust = true;
+            if (!(adjustPivot > 2000)) adjustPivot += 20;
+            Lift.getInstance().pivotLift(adjustPivot);
+        } else if (lowerLimit) {
+            isAdjust = true;
+            if (!(adjustPivot < -100)) adjustPivot -= 20;
+            Lift.getInstance().pivotLift(adjustPivot);
+        }
     }
 
     //Pivots the Lift via manual input.
-    public void manualPivot(double gamepad) {
+    public void manualPivot(double gamepad, boolean toggle) {
         Lift.getInstance().manualPivot(-gamepad, antiMode);
+        toggleAntiGravity(toggle);
     }
 
     //Identifies the buttons we are tracking to control our anti-gravity mode toggle.
@@ -211,9 +237,10 @@ public class Controls {
     }
 
     //Runs the intake to collect or release minerals.
+    //Due to VEX functioning as a CRSERVO, Battery Voltage Must be sufficient.
     public void intake(boolean gamepad, boolean gamepad2) {
-        if (gamepad) {Manipulator.getInstance().intake(.7);}
-        else if (gamepad2) {Manipulator.getInstance().intake(-.7);}
+        if (gamepad) {Manipulator.getInstance().intake(.8);}
+        else if (gamepad2) {Manipulator.getInstance().intake(-.8);}
         else {Manipulator.getInstance().intake(0);}
     }
 
@@ -266,6 +293,12 @@ public class Controls {
     //Returns the lift variables.
     public boolean getGravityToggle() {
         return antiMode;
+    }
+
+    //Returns the hook indicator.
+    public String getHook() {
+        if (!isHook) return "ON.";
+        return "OFF.";
     }
 
     //Returns our drive variables.

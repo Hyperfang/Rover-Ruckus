@@ -4,12 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.Hyperfang.Robot.Base;
 import org.firstinspires.ftc.Hyperfang.Robot.Controls;
-import org.firstinspires.ftc.Hyperfang.Robot.Lift;
-import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
-
-import java.util.Arrays;
 
 
 @TeleOp(name="Arcade", group="Iterative Opmode")
@@ -18,12 +13,10 @@ public class Arcade extends OpMode {
     //Runtime Variable
     private ElapsedTime runtime = new ElapsedTime();
 
-    //Instantiating the controls object.
-
     @Override
     public void init() {
-        Controls.getInstance(this);
-        Controls.getInstance().initRobot();
+        //Instantiating the controls object.
+        Controls.getInstance(this).initRobot();
         telemetry.addData("Status", "Initialized");
     }
 
@@ -36,10 +29,10 @@ public class Arcade extends OpMode {
     /**Below is the controls and which drivers the correspond to. Here are the current controls
      * being used on the Gamepads.
      *
-     * Gamepad 1: Left Stick, Right Stick, Left Bumper, Right Bumper, Y
+     * Gamepad 1: Left Stick, Right Stick, Left Bumper, Right Bumper
      *
-     * Gamepad 2: Left Stick, Right Stick, Left Trigger, Right Trigger,
-     *            Bumper, A, Y, Right Bumper, Left Bumper
+     * Gamepad 2: Left Stick, Right Stick, Left Bumper, Right Bumper,
+     *            X, Y, DPAD (UP, DOWN, LEFT)
      */
 
     @Override
@@ -55,22 +48,17 @@ public class Arcade extends OpMode {
 
         //Driver 2 controls the Lift: Lift, Pivot and Lift Lock
         Controls.getInstance().lock(gamepad2.y);
-        Controls.getInstance().moveLift(gamepad2.left_stick_y);
-        Controls.getInstance().macroPivot(gamepad2.a);
-        //Add Minor Adjustments
+        Controls.getInstance().moveLift(-gamepad2.left_stick_y);
+        Controls.getInstance().macroPivot(gamepad2.dpad_left, gamepad2.dpad_up, gamepad2.dpad_down);
 
         //Driver 2 controls Manipulation: Intake and Deposit
-        Controls.getInstance().intake(gamepad2.left_bumper, gamepad2.right_bumper);
+        Controls.getInstance().intake(gamepad2.right_bumper, gamepad2.left_bumper);
         Controls.getInstance().deposit(gamepad2.x);
 
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Base Encoder", Base.getInstance().getEncoderPosition());
-        telemetry.addData("Pivot Encoder", Lift.getInstance().getPivotPosition());
-        telemetry.addData("Right Encoder", Lift.getInstance().getLiftPosition());
-        telemetry.addData("Left Encoder", Lift.getInstance().getLiftLeft());
-
+        // Show the elapsed game time and modes.
         telemetry.addData("Half Mode: ", Controls.getInstance().getSpeedToggle());
         telemetry.addData("Reverse Mode: ", Controls.getInstance().getDirectionToggle());
+        telemetry.addData("The Hooks are ", Controls.getInstance().getHook());
         telemetry.addData("Status", "Run Time: " + runtime.toString());
     }
 

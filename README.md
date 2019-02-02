@@ -3,7 +3,7 @@
 
 This year, the software team is composed of 3 members: *Software Lead (and APM) Caleb Browne*, *Daniel Kasabov*, and *Shaan Kumar*.
 
-For more information about **11503 Hyperfang**, visit our website. *(Coming Soon)*
+For more information about **11503 Hyperfang**, visit [our website](https://www.11503hyperfang.org/).
 
 For more information about the *FIRST* organization, visit the [FIRST website](https://www.firstinspires.org/).
 
@@ -11,6 +11,9 @@ For more information about the *FIRST* organization, visit the [FIRST website](h
 **11503 Hyperfang** uses multiple concepts and features in our code to create a successful application for the robot. Some of the features of our project include:
 
 * **Object Oriented Programming** - The main part of our project is programmed using a programming paradigm known as Object Oriented Programming. This allows us to represent the modularity of our robot through code.
+
+* **Singleton Design Pattern** - Ensuring that the robot initializes one object per sub-component is vital in decreasing initializing speeds and
+making sure extra resources aren't wasted.
 
 * **State Machine** - Our autonomous uses a Finite-state machine to run the robot. A state machine allows us to react to the game based on states for a consistent, one-class autonomous.
 
@@ -21,8 +24,6 @@ For more information about the *FIRST* organization, visit the [FIRST website](h
 * **Augmented Reality** - In addition to Computer Vision, we also use Vuforia: an Augmented Reality SDK that allows us to recognize objects (vuMarks), and position the robot based on the sensed object.
 
 * **Machine Learning** - Another way we can detect objects (Gold Cube, Silver Ball) is through TensorFlow (lite), a machine learning library which allows us to use Neural Networks.
-
-* **Redacted** - Redacted until 2/9/2019.
 
 ### Javadoc Reference Material
 This project uses an amount of code from the FTC SDK. Javadoc reference documentation for the FTC SDK is accessible [online](http://ftctechnh.github.io/ftc_app/doc/javadoc/index).

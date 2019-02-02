@@ -5,14 +5,12 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.Hyperfang.Robot.Lift;
-import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
-import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
 
 @Autonomous(name="Reset", group="Iterative Opmode")
-public class ResetEnc extends OpMode {
+public class Reset extends OpMode {
 
 //--------------------------------------------------------------------------------------------------
-    public ResetEnc() {} //Default Constructor
+    public Reset() {} //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
     private ElapsedTime runtime;

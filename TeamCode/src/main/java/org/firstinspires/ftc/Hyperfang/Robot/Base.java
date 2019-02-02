@@ -25,7 +25,7 @@ public class Base {
 
     //Tolerance Variables for the movement methods.
     private static final double encTolerance = 1;
-    private static final double turnTolerance = 1;
+    private static final double turnTolerance = 2;
     private static final double rangeTolerance = 1;
 
     //Logging variables of the Robot position.
@@ -48,6 +48,7 @@ public class Base {
     private PID rangePID;
     private boolean loopOneT;
     private boolean loopOneR;
+    private int rampPow;
 
     //Initializes the base object.
     public static Base getInstance() {
@@ -75,28 +76,36 @@ public class Base {
         rSensor = new Range("range", opMode);
         loopOneT = true;
         loopOneR = true;
+        mOpMode.telemetry.addLine("Base Version 2 Initialized.");
     }
 
     //Initializes the IMU.
-    //Runs a loop until the IMU is initialized.
+    //Runs in a loop until the IMU is initialized.
     public void initIMU(OpMode opMode) {
-        imu = new IMU(opMode);
-        while (!imu.isGyroCalib())
-            stop();
+        if (imu == null) {
+            imu = new IMU(opMode);
+            curAng = 0;
+        } else {
+            if (!imu.isGyroCalib()) {
+                stop();
+                mOpMode.telemetry.addLine("Initializing IMU...");
+            }
+            else mOpMode.telemetry.addLine("IMU initialized.");
+        }
     }
 
     //Resets the IMU if needed.
     public void destroyIMU() {
         imu = null;
-        curAng = 0;
     }
 
     //After testing the encoders we found out the FTC SDK clears encoder information (unlike motors)
     //in between OpModes. Due to this, this method must be called in init to set the encoders.
     public void ftcEnc() {
-        frontLeft.setDirection(DcMotor.Direction.REVERSE);
-        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.REVERSE);
         curEnc = 0;
+        curDis = 0;
         resetEncoders();
     }
 
@@ -116,7 +125,7 @@ public class Base {
         frontRight.setPower(com.qualcomm.robotcore.util.Range.clip(right, -1.0, 1.0));
     }
 
-    //Moves our robot based on linear (forward/backwards) and turn values (right/left).
+    //Moves our robot based on linear (forward/backwards) and turn values (left/right).
     public void move(double linear, double turn) {
         backLeft.setPower(com.qualcomm.robotcore.util.Range.clip(linear + turn, -1.0, 1.0));
         backRight.setPower(com.qualcomm.robotcore.util.Range.clip(linear - turn, -1.0, 1.0));
@@ -203,22 +212,14 @@ public class Base {
         return Math.abs(curEnc / COUNTS_PER_INCH - pos) > encTolerance;
     }
 
-    //Returns true if all motors are busy while encoders are ran using position.
-    private boolean isBaseBusy() {
-        if (!backRight.isBusy()) return false;
-        else if (!backLeft.isBusy()) return false;
-        else if (!frontLeft.isBusy()) return false;
-        else if (!frontRight.isBusy()) return false;
-        return true;
-    }
-
     //Turns to a desired angle in the fastest path using the IMU.
     //ABSOLUTE (Based on IMU initialization) where the right axis is a negative value.
     //Uses a P to control precision.
     public double turnAbsolute(double deg) {
         //Create a PID controller at the start of the movement.
         if (loopOneT) {
-            turnPID = new PID(.009,.0005, 1.5);
+            turnPID = new PID(.006,.0000005, 1.5);
+            rampPow = 2;
             loopOneT = false;
         }
 
@@ -233,25 +234,29 @@ public class Base {
             double errorMove = Math.abs(deg - curAng);
             if (error > 180) {
                 error = error - 360;
-            } else if (error < -180) {
+            } else if (error < - 180) {
                 error = error + 360;
             }
 
             //Using the error to calculate our power.
-            double pow = Math.abs(turnPID.update(Math.abs(error)));
+            double pow = Math.abs(turnPID.update(Math.abs(error))) / rampPow;
+
+            //Ramping the power ensures the robot doesn't jerk at the start of the movement.
+            if (rampPow > 1) { rampPow -= .02; }
+
             //The minimum power required to turn the robot.
-            if (pow < .14) pow = .14;
+            if (pow < .05) pow = .05;
 
             //The following code allows us to turn in the direction we need, and if we cross the axis
             //at which 180 degrees becomes -180, our robot can turn back in the direction which is closest
             //to the position we wish to be at (We won't make a full rotation to get to -175, if we hit 180).
             if (curAng < deg) {
-                if (errorMove < 180) return -pow; //Turns left
-                if (errorMove > 180) return pow;  //Turns right if we go past the pos/neg mark.
+                if (errorMove < 180) return pow; //Turns left
+                if (errorMove > 180) return -pow;  //Turns right if we go past the pos/neg mark.
 
             } else if (curAng > deg) {
-                if (errorMove < 180) return pow;  //Turns right
-                if (errorMove > 180) return -pow; //Turns left if we go past the pos/neg mark.
+                if (errorMove < 180) return -pow;  //Turns right
+                if (errorMove > 180) return pow; //Turns left if we go past the pos/neg mark.
             }
         }
         return 0;
@@ -324,11 +329,11 @@ public class Base {
 
                 //If the sensor value is greater than the target, move backwards.
                 if (curDis > inAway) {
-                    return pow;
+                    return -pow;
                 }
                 //If the sensor value is lower than than the target, move forwards.
                 if (curDis < inAway) {
-                    return -pow;
+                    return pow;
                 }
             }
         }
