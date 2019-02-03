@@ -102,6 +102,18 @@ public class Lift {
         liftMotorL.setMode(mode);
     }
 
+    //Sets the modes of the Pivot.
+    public void setZeroLift(DcMotor.ZeroPowerBehavior mode) {
+        liftMotorR.setZeroPowerBehavior(mode);
+        liftMotorL.setZeroPowerBehavior(mode);
+    }
+
+    //Sets the modes of the Pivot.
+    public void setZeroPivot(DcMotor.ZeroPowerBehavior mode) {
+        pivotMotorL.setZeroPowerBehavior(mode);
+        pivotMotorR.setZeroPowerBehavior(mode);
+    }
+
     //Resets the Lift encoders.
     public void resetLiftPosition() {
         liftMotorR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -145,7 +157,7 @@ public class Lift {
     }
 
     //Sets the Lift motors.
-    private void setLift(double pow) {
+    public void setLift(double pow) {
         liftMotorR.setPower(pow);
         liftMotorL.setPower(pow);
     }

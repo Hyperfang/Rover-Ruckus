@@ -49,7 +49,7 @@ public class Arcade extends OpMode {
         //Driver 2 controls the Lift: Lift, Pivot and Lift Lock
         Controls.getInstance().lock(gamepad2.y);
         Controls.getInstance().moveLift(-gamepad2.left_stick_y);
-        Controls.getInstance().macroPivot(gamepad2.dpad_left, gamepad2.dpad_up, gamepad2.dpad_down);
+        Controls.getInstance().macroPivot(gamepad2.left_trigger, gamepad2.dpad_up, gamepad2.dpad_down);
 
         //Driver 2 controls Manipulation: Intake and Deposit
         Controls.getInstance().intake(gamepad2.right_bumper, gamepad2.left_bumper);

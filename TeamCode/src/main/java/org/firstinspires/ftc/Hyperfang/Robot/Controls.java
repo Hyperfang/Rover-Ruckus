@@ -2,6 +2,7 @@ package org.firstinspires.ftc.Hyperfang.Robot;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Controls {
@@ -87,6 +88,9 @@ public class Controls {
         Base.getInstance(mOpMode).ftcEnc();
         Lift.getInstance(mOpMode).ftcEnc();
         Lift.getInstance().setModeEncoderLift(DcMotor.RunMode.RUN_USING_ENCODER);
+        Lift.getInstance().setZeroLift(DcMotor.ZeroPowerBehavior.BRAKE);
+        Lift.getInstance().setZeroPivot(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
     }
 
     //Drive Method
@@ -192,6 +196,42 @@ public class Controls {
                 pivotDelay.reset();
             } //Setting to locked mode.
             else if (toggle) {
+                isAdjust = false;
+                isPivot = true;
+                pivotDelay.reset();
+            }
+        }
+
+        if (upperLimit) {
+            isAdjust = true;
+            if (!(adjustPivot > 2000)) adjustPivot += 20;
+            Lift.getInstance().pivotLift(adjustPivot);
+        } else if (lowerLimit) {
+            isAdjust = true;
+            if (!(adjustPivot < -100)) adjustPivot -= 20;
+            Lift.getInstance().pivotLift(adjustPivot);
+        }
+    }
+
+    //Pivots the Lift via macro with a trigger.
+    public void macroPivot(float toggle, boolean upperLimit, boolean lowerLimit) {
+        if (isPivot && !isAdjust) Lift.getInstance().pivotUp();
+        else if (!isPivot && !isAdjust) Lift.getInstance().pivotDown();
+        else Lift.getInstance().pivotLift(adjustPivot);
+
+        //Detects the lift position while adjusting to determine the next toggle position.
+        if (isAdjust && Lift.getInstance().getPivotPosition() > 1000) isPivot = true;
+        else if (isAdjust && Lift.getInstance().getPivotPosition() < 1000) isPivot = false;
+
+        //Allows time for button release.
+        if (pivotDelay.milliseconds() > 600) {
+            //Toggle is the pivot toggle button.
+            if (toggle > 0 && isPivot) {
+                isAdjust = false;
+                isPivot = false;
+                pivotDelay.reset();
+            } //Setting to locked mode.
+            else if (toggle > 0) {
                 isAdjust = false;
                 isPivot = true;
                 pivotDelay.reset();

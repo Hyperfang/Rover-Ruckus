@@ -10,10 +10,9 @@ import org.firstinspires.ftc.Hyperfang.Robot.Lift;
 import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
 import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-@Autonomous(name = "Ground Depot", group = "Iterative Opmode")
-public class AutoMain extends OpMode {
+@Autonomous(name = "Ground Crater", group = "Iterative Opmode")
+public class AutoMain2 extends OpMode {
 
     //List of system states.
     private enum State {
@@ -78,7 +77,7 @@ public class AutoMain extends OpMode {
     }
 
     //--------------------------------------------------------------------------------------------------
-    public AutoMain() {
+    public AutoMain2() {
     } //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
@@ -97,7 +96,7 @@ public class AutoMain extends OpMode {
 
         //TODO: Consistence Right Sample.
         pos = Tensorflow.Position.UNKNOWN;
-        vuMark = "";
+        vuMark = "Blue-Rover";
 
         //Lock the lift and set the lift position.
         Lift.getInstance().lock();

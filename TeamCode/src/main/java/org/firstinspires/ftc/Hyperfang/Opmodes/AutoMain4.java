@@ -10,10 +10,9 @@ import org.firstinspires.ftc.Hyperfang.Robot.Lift;
 import org.firstinspires.ftc.Hyperfang.Robot.Manipulator;
 import org.firstinspires.ftc.Hyperfang.Vision.Tensorflow;
 import org.firstinspires.ftc.Hyperfang.Vision.Vuforia;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-@Autonomous(name = "Ground Depot", group = "Iterative Opmode")
-public class AutoMain extends OpMode {
+@Autonomous(name = "Risky Depot", group = "Iterative Opmode")
+public class AutoMain4 extends OpMode {
 
     //List of system states.
     private enum State {
@@ -78,7 +77,7 @@ public class AutoMain extends OpMode {
     }
 
     //--------------------------------------------------------------------------------------------------
-    public AutoMain() {
+    public AutoMain4() {
     } //Default Constructor
 //--------------------------------------------------------------------------------------------------
 
@@ -97,7 +96,7 @@ public class AutoMain extends OpMode {
 
         //TODO: Consistence Right Sample.
         pos = Tensorflow.Position.UNKNOWN;
-        vuMark = "";
+        vuMark = "Blue-Rover";
 
         //Lock the lift and set the lift position.
         Lift.getInstance().lock();
@@ -130,7 +129,7 @@ public class AutoMain extends OpMode {
         //Unlocking the Lift to start Landing.
         Lift.getInstance().unlock();
         wait.reset();
-        setState(State.FINDMIN);
+        setState(State.LAND);
     }
 
     //Loop: Loops once driver hits play after start() runs.
@@ -160,7 +159,7 @@ public class AutoMain extends OpMode {
                                 manipPath[1] = false;
                             }
                         } else if (Lift.getInstance().getLiftPosition() <= 500) {
-                            telemetry.addLine("LOOPING 2");
+                            telemetry.addLine("LOOPING 2 - No power if seeing");
                             Lift.getInstance().moveLiftEnc(1650, .75);
                         } else {
                             Lift.getInstance().moveLiftEnc(1650, .3);
