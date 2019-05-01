@@ -42,24 +42,7 @@ public class Arcade extends OpMode {
         //Driver 1 controls Driving: Base, Movement Modifiers (Reverse Mode, Half-Speed, Reset (Half-Speed))
         Controls.getInstance().moveArcade();
 
-        //Reverse Mode, Half-Speed, Reset (Half-Speed)
-        Controls.getInstance().setDirectionButton(gamepad1.left_bumper);
         Controls.getInstance().setSpeedButtons(gamepad1.right_bumper, gamepad1.y);
-
-        //Driver 2 controls the Lift: Lift, Pivot and Lift Lock
-        Controls.getInstance().lock(gamepad2.y);
-        Controls.getInstance().moveLift(-gamepad2.left_stick_y);
-        Controls.getInstance().macroPivot(gamepad2.left_trigger, gamepad2.dpad_up, gamepad2.dpad_down);
-
-        //Driver 2 controls Manipulation: Intake and Deposit
-        Controls.getInstance().intake(gamepad2.right_bumper, gamepad2.left_bumper);
-        Controls.getInstance().deposit(gamepad2.x);
-
-        // Show the elapsed game time and modes.
-        telemetry.addData("Half Mode: ", Controls.getInstance().getSpeedToggle());
-        telemetry.addData("Reverse Mode: ", Controls.getInstance().getDirectionToggle());
-        telemetry.addData("The Hooks are ", Controls.getInstance().getHook());
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
     }
 
     @Override

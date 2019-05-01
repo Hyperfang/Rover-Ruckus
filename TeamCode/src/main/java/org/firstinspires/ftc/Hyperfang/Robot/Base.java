@@ -69,10 +69,10 @@ public class Base {
     //Initializes the base object.
     private Base(OpMode opMode) {
         mOpMode = opMode;
-        frontLeft = mOpMode.hardwareMap.get(DcMotor.class, "Front Left");
-        frontRight = mOpMode.hardwareMap.get(DcMotor.class, "Front Right");
-        backLeft = mOpMode.hardwareMap.get(DcMotor.class, "Back Left");
-        backRight = mOpMode.hardwareMap.get(DcMotor.class, "Back Right");
+        frontLeft = mOpMode.hardwareMap.get(DcMotor.class, "frontL");
+        frontRight = mOpMode.hardwareMap.get(DcMotor.class, "frontR");
+        backLeft = mOpMode.hardwareMap.get(DcMotor.class, "backL");
+        backRight = mOpMode.hardwareMap.get(DcMotor.class, "backR");
         rSensor = new Range("range", opMode);
         loopOneT = true;
         loopOneR = true;
